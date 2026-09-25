@@ -1,5 +1,5 @@
-{ self, ... }: {
-  flake.nixosModules.fish = { pkgs, ... }: {
+{ ... }: {
+  flake.nixosModules.cli-fish = { pkgs, ... }: {
     # 1. Enable Fish shell system-wide
     programs.fish = {
       enable = true;
@@ -10,6 +10,7 @@
         la = "ls -la";
         g = "git";
         rebuild = "sudo nixos-rebuild switch";
+        nixdel= "sudo nix-collect-garbage -d";
       };
 
       # Custom Fish abbreviations (expands automatically as you type)
@@ -26,6 +27,6 @@
     };
 
     # 2. Set Fish as the default shell for your user
-    users.users."syarif".shell = pkgs.fish;
+    users.users.syarif.shell = pkgs.fish;
   };
 }

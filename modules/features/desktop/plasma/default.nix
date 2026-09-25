@@ -1,5 +1,5 @@
-{ self, ... }: {
-  flake.nixosModules.desktopPlasma = { pkgs, ... }: {
+{ ... }: {
+  flake.nixosModules.desktop-plasma = { pkgs, ... }: {
     # Enable X11 and KDE Plasma 6
     services.xserver.enable = true;
     services.displayManager.sddm.enable = true;
@@ -17,6 +17,7 @@
     # Ensure Konsole and KDE desktop tools are installed
     environment.systemPackages = with pkgs; [
       kdePackages.konsole
+      kdePackages.kate
     ];
 
     # Tell Konsole default profile to use $SHELL (User's configured default shell)

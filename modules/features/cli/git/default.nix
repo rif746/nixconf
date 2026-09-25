@@ -1,5 +1,5 @@
-{ self, ... }: {
-  flake.nixosModules.git = { pkgs, config, ... }: {
+{ ... }: {
+  flake.nixosModules.cli-git = { pkgs, config, ... }: {
     programs.git = {
       enable = true;
       config = {
@@ -8,7 +8,7 @@
           email = "ubed56pb@gmail.com";
         };
         init = {
-          defaultBranch = "main";
+          defaultBranch = "master";
         };
         pull = {
           rebase = true; # Merge on pull by default

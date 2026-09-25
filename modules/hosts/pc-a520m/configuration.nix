@@ -5,17 +5,17 @@
       # Hardware
       self.nixosModules.a520MHardware
 
-      # Modular Features
-      self.nixosModules.desktopPlasma
-      self.nixosModules.audio
-      self.nixosModules.userSyarif
-      self.nixosModules.fish
+      # System
+      self.nixosModules.desktop-plasma
+      self.nixosModules.system-audio
+      self.nixosModules.system-users
 
-      # Standalone program modules
-      self.nixosModules.git
-      self.nixosModules.firefox
-      self.nixosModules.nvim
-      self.nixosModules.haruna
+      # Apps
+      self.nixosModules.cli-fish
+      self.nixosModules.cli-git
+      self.nixosModules.cli-nvim
+      self.nixosModules.apps-firefox
+      self.nixosModules.apps-haruna
     ];
 
     # Bootloader Setup
@@ -32,9 +32,26 @@
     time.timeZone = "Asia/Jakarta";
     i18n.defaultLocale = "id_ID.UTF-8";
 
+    # Ensure Konsole and KDE desktop tools are installed
+    environment.systemPackages = with pkgs; [
+      nil
+    ];
+
     # System Packages & Nix Settings
     nixpkgs.config.allowUnfree = true;
-    nix.settings.experimental-features = [ "nix-command" "flakes" ];
+
+    # Nix settings, auto cleanup and enable flakes
+    nix = {
+        settings.auto-optimise-store = true;
+        settings.allowed-users = [ "syarif" ];
+        settings.experimental-features = [ "nix-command" "flakes" ];
+        gc = {
+            automatic = true;
+            dates = "weekly";
+            options = "--delete-older-than 7d";
+        };
+    };
+
 
     system.stateVersion = "26.05";
   };
