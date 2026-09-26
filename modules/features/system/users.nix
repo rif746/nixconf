@@ -5,5 +5,11 @@
       description = "Syarif Ubaidillah";
       extraGroups = [ "networkmanager" "wheel" ];
     };
+
+    home-manager.users.syarif = {
+      home.username = "syarif";
+      home.homeDirectory = "/home/syarif";
+      home.stateVersion = "26.05";
+    };
   };
 }

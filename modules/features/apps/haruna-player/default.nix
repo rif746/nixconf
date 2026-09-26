@@ -6,22 +6,10 @@
       mpv
     ];
 
-    system.userActivationScripts.harunaConfig = {
-      text = ''
-        HARUNA_DIR="${config.users.users.syarif.home}/.config/haruna"
-        mkdir -p "$HARUNA_DIR"
-
-        # Membaca isi dari folder dotfiles/
-        cat <<'EOF' > "$HARUNA_DIR/mpv.conf"
-${builtins.readFile ./dotfiles/mpv.conf}
-EOF
-
-        cat <<'EOF' > "$HARUNA_DIR/haruna.conf"
-${builtins.readFile ./dotfiles/haruna.conf}
-EOF
-
-        chown -R syarif:users "$HARUNA_DIR"
-      '';
+    # Konfigurasi dotfiles via Home-Manager
+    home-manager.users.syarif = {
+      xdg.configFile."haruna/mpv.conf".text = builtins.readFile ./dotfiles/mpv.conf;
+      xdg.configFile."haruna/haruna.conf".text = builtins.readFile ./dotfiles/haruna.conf;
     };
   };
 }

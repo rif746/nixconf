@@ -1,39 +1,69 @@
+# modules/features/desktop/plasma.nix
 { ... }: {
   flake.nixosModules.desktop-plasma = { pkgs, ... }: {
-    # Enable X11 and KDE Plasma 6
+    # 1. Aktifkan Plasma 6 di tingkat NixOS
     services.xserver.enable = true;
     services.displayManager.sddm.enable = true;
     services.desktopManager.plasma6.enable = true;
 
-    # X11 Keymap
-    services.xserver.xkb = {
-      layout = "id";
-      variant = "";
+    # 2. Pengaturan Plasma via Home-Manager & Plasma-Manager
+    home-manager.users.syarif = {
+      programs.plasma = {
+        enable = true;
+
+        # Pengaturan Tema & Tampilan
+        workspace = {
+          clickItemTo = "select";
+          lookAndFeel = "org.kde.breezedark.desktop";
+        };
+
+        # Konfigurasi Panel Utama (Taskbar Bawah)
+        panels = [
+          {
+            location = "bottom";
+            height = 38;
+            minLength = null;
+            maxLength = null;
+            widgets = [
+              # Menu Aplikasi Kickoff
+              {
+                name = "org.kde.plasma.kickoff";
+                config = {
+                  General.icon = "nix-snowflake";
+                };
+              }
+              # Icon-only Task Manager
+              "org.kde.plasma.icontasks"
+              # Margins Separator
+              "org.kde.plasma.marginsseparator"
+              # System Tray (Baterai, Wifi, Suara)
+              "org.kde.plasma.systemtray"
+              # Jam Digital
+              "org.kde.plasma.digitalclock"
+            ];
+          }
+        ];
+
+        session.sessionRestore.restoreOpenApplicationsOnLogin = "startWithEmptySession";
+
+        # Custom Keybindings / Shortcuts
+        shortcuts = {
+          "ksmserver"."Lock Session" = "Meta+L";
+          "org.kde.spectacle.desktop"."RectangularRegionScreenShot" = "Meta+Shift+S";
+        };
+
+        configFile = {
+          "baloofilerc"."Basic Settings"."Indexing-Enabled" = false;
+          "dolphinrc"."General"."RememberOpenedTabs" = false;
+          "dolphinrc"."MainWindow"."MenuBar" = "Enabled";
+          "kwinrc"."org.kde.kdecoration2"."ButtonsOnLeft" = "SF";
+          "kwinrc"."Desktops"."Number" = {
+            value = 8;
+            # Forces kde to not change this value (even through the settings app).
+            immutable = true;
+          };
+        };
+      };
     };
-
-    # Enable Printing
-    services.printing.enable = true;
-
-    # Ensure Konsole and KDE desktop tools are installed
-    environment.systemPackages = with pkgs; [
-      kdePackages.konsole
-      kdePackages.kate
-    ];
-
-    # Tell Konsole default profile to use $SHELL (User's configured default shell)
-    environment.etc."xdg/konsolerc".text = ''
-      [Desktop Entry]
-      DefaultProfile=Profile 1.profile
-
-      [Favorite Profiles]
-      Favorites=Profile 1.profile
-    '';
-
-    environment.etc."xdg/konsole/Profile 1.profile".text = ''
-      [General]
-      Name=Profile 1
-      Parent=FALLBACK/
-      Command=/run/current-system/sw/bin/fish
-    '';
   };
 }

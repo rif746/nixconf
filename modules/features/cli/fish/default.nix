@@ -1,32 +1,48 @@
+# modules/features/cli/fish.nix
 { ... }: {
   flake.nixosModules.cli-fish = { pkgs, ... }: {
-    # 1. Enable Fish shell system-wide
-    programs.fish = {
-      enable = true;
+    programs.fish.enable = true;
 
-      # Define shell aliases
-      shellAliases = {
-        ll = "ls -l";
-        la = "ls -la";
-        g = "git";
-        rebuild = "sudo nixos-rebuild switch";
-        nixdel= "sudo nix-collect-garbage -d";
+    home-manager.users.syarif = {
+      programs.fish = {
+        enable = true;
+
+        interactiveShellInit = ''
+          set -g fish_greeting ""
+        '';
+
+        shellAliases = {
+          rebuild = "sudo nixos-rebuild switch";
+          nix-clear = "sudo nix-collect-garbage";
+          c = "clear";
+          g = "git";
+          gs = "git status";
+        };
+
+        shellAbbrs = {
+          ga = "git add";
+          gc = "git commit -m";
+          gp = "git push";
+          gpl = "git pull";
+        };
+
+        plugins = [
+          {
+            name = "z";
+            src = pkgs.fishPlugins.z.src;
+          }
+          {
+            name = "colored-man-pages";
+            src = pkgs.fishPlugins.colored-man-pages.src;
+          }
+        ];
       };
 
-      # Custom Fish abbreviations (expands automatically as you type)
-      shellAbbrs = {
-        gs = "git status";
-        ga = "git add";
-        gc = "git commit";
+      # Prompt Starship
+      programs.starship = {
+        enable = true;
+        enableFishIntegration = true;
       };
-
-      # Custom functions or raw Fish script executed on interactive shell start
-      interactiveShellInit = ''
-        set -g fish_greeting "" # Disable default welcome greeting
-      '';
     };
-
-    # 2. Set Fish as the default shell for your user
-    users.users.syarif.shell = pkgs.fish;
   };
 }

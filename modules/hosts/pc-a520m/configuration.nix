@@ -1,7 +1,10 @@
-{ self, ... }: {
+{ self, inputs, ... }: {
 
   flake.nixosModules.a520MConfiguration = { pkgs, ... }: {
     imports = [
+      # Home Manager
+      inputs.home-manager.nixosModules.home-manager
+
       # Hardware
       self.nixosModules.a520MHardware
 
@@ -9,6 +12,8 @@
       self.nixosModules.desktop-plasma
       self.nixosModules.system-audio
       self.nixosModules.system-users
+      self.nixosModules.system-joystick
+      self.nixosModules.system-plymouth
 
       # Apps
       self.nixosModules.cli-fish
@@ -19,9 +24,18 @@
     ];
 
     # Bootloader Setup
-    boot.loader.systemd-boot.enable = true;
-    boot.loader.efi.canTouchEfiVariables = true;
-    boot.loader.grub.enable = false;
+    boot.loader = {
+      efi.canTouchEfiVariables = true;
+
+      systemd-boot = {
+        enable = true;
+
+        consoleMode = "max";
+
+        editor = false;
+      };
+    };
+
 
     # Kernel & Host Settings
     boot.kernelPackages = pkgs.linuxPackages_latest;
@@ -32,9 +46,10 @@
     time.timeZone = "Asia/Jakarta";
     i18n.defaultLocale = "id_ID.UTF-8";
 
-    # Ensure Konsole and KDE desktop tools are installed
+    # Ensure core tools are installed
     environment.systemPackages = with pkgs; [
       nil
+      usbutils
     ];
 
     # System Packages & Nix Settings
@@ -50,6 +65,21 @@
             dates = "weekly";
             options = "--delete-older-than 7d";
         };
+    };
+
+    # Home-Manager global settings
+    home-manager = {
+      useGlobalPkgs = true;
+      useUserPackages = true;
+      extraSpecialArgs = { inherit inputs self; };
+      backupFileExtension = "bak";
+
+      # Masukkan Plasma-Manager ke Home-Manager user syarif
+      users.syarif = {
+        imports = [
+          inputs.plasma-manager.homeManagerModules.plasma-manager
+        ];
+      };
     };
 
 
