@@ -1,4 +1,3 @@
-# modules/features/desktop/plasma.nix
 { ... }: {
   flake.nixosModules.desktop-plasma = { pkgs, ... }: {
     # 1. Aktifkan Plasma 6 di tingkat NixOS
@@ -61,6 +60,22 @@
             value = 8;
             # Forces kde to not change this value (even through the settings app).
             immutable = true;
+          };
+        };
+      };
+
+      programs.konsole = {
+        enable = true;
+        defaultProfile = "Default";
+
+        profiles = {
+          "Default" = {
+            name = "Default";
+            command = "/bin/sh -c $SHELL";
+            font = {
+              name = "fira-code-symbols";
+              size = 10;
+            };
           };
         };
       };

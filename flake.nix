@@ -14,6 +14,15 @@
       inputs.home-manager.follows = "home-manager";
     };
   };
+  outputs =
+    inputs:
+    inputs.flake-parts.lib.mkFlake { inherit inputs; } {
+      imports = [
+        # Mendaftarkan dukungan flake.homeModules ke flake-parts
+        inputs.home-manager.flakeModules.home-manager
 
-  outputs = inputs: inputs.flake-parts.lib.mkFlake {inherit inputs;} (inputs.import-tree ./modules);
+        # Auto-import folder modules
+        (inputs.import-tree ./modules)
+      ];
+    };
 }
