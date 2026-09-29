@@ -25,20 +25,27 @@
     # Ensure core tools are installed
     environment.systemPackages = with pkgs; [
       nil
+      zip
+      unzip
+      rar
       usbutils
       tree
+      pciutils
     ];
 
     # Nix settings, auto cleanup and enable flakes
     nix = {
-        settings.auto-optimise-store = true;
-        settings.allowed-users = [ "syarif" ];
-        settings.experimental-features = [ "nix-command" "flakes" ];
-        gc = {
-            automatic = true;
-            dates = "weekly";
-            options = "--delete-older-than 7d";
-        };
+      settings.auto-optimise-store = true;
+      settings.allowed-users = [ "syarif" ];
+      settings.experimental-features = [
+        "nix-command"
+        "flakes"
+      ];
+      gc = {
+        automatic = true;
+        dates = "weekly";
+        options = "--delete-older-than 7d";
+      };
     };
   };
 }

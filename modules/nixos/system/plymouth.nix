@@ -13,12 +13,10 @@
 
       consoleLogLevel = 0;
       initrd.verbose = false;
+      initrd.kernelModules = [ "amdgpu" ];
       kernelParams = [
         "quiet"
         "splash"
-
-        "video=HDMI-A-1:1920x1080@60"
-        "video=DP-1:900x1440@60"
 
         "fbcon=nodefer"
         "boot.shell_on_fail"

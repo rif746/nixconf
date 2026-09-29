@@ -1,0 +1,2336 @@
+diff --git a/flake.lock b/flake.lock
+index cb63742..98fbeeb 100644
+--- a/flake.lock
++++ b/flake.lock
+@@ -18,6 +18,24 @@
+         "type": "github"
+       }
+     },
++    "home-manager": {
++      "inputs": {
++        "nixpkgs": "nixpkgs"
++      },
++      "locked": {
++        "lastModified": 1790365885,
++        "narHash": "sha256-iQ0ebhiVo64NktTnwft9hNxlFu4j5cvljVxyJaEVIP4=",
++        "owner": "nix-community",
++        "repo": "home-manager",
++        "rev": "7b4c5ec4bedaf1e062bbc1bcaeddbc6bd242aa1b",
++        "type": "github"
++      },
++      "original": {
++        "owner": "nix-community",
++        "repo": "home-manager",
++        "type": "github"
++      }
++    },
+     "import-tree": {
+       "locked": {
+         "lastModified": 1788467110,
+@@ -35,18 +53,15 @@
+     },
+     "nixpkgs": {
+       "locked": {
+-        "lastModified": 1790185690,
+-        "narHash": "sha256-xJ+X4hBtOcAFGBOe5nAMyMUeF9foJBmIOu3NjBqBycU=",
+-        "owner": "nixos",
+-        "repo": "nixpkgs",
+-        "rev": "4975466d324710c576dc11ad614684e6bd8cad8e",
+-        "type": "github"
++        "lastModified": 1789632929,
++        "narHash": "sha256-j08lBbqaYwjsW0xy6Dh4MNZpQ/oSvLU1MLAo38OXphM=",
++        "rev": "a32edd7654519351e48e80372a928df336394670",
++        "type": "tarball",
++        "url": "https://releases.nixos.org/nixpkgs/nixpkgs-26.11pre1075288.a32edd765451/nixexprs.tar.zst"
+       },
+       "original": {
+-        "owner": "nixos",
+-        "ref": "nixos-unstable",
+-        "repo": "nixpkgs",
+-        "type": "github"
++        "type": "tarball",
++        "url": "https://channels.nixos.org/nixpkgs-unstable/nixexprs.tar.zst"
+       }
+     },
+     "nixpkgs-lib": {
+@@ -65,6 +80,22 @@
+       }
+     },
+     "nixpkgs_2": {
++      "locked": {
++        "lastModified": 1790185690,
++        "narHash": "sha256-xJ+X4hBtOcAFGBOe5nAMyMUeF9foJBmIOu3NjBqBycU=",
++        "owner": "nixos",
++        "repo": "nixpkgs",
++        "rev": "4975466d324710c576dc11ad614684e6bd8cad8e",
++        "type": "github"
++      },
++      "original": {
++        "owner": "nixos",
++        "ref": "nixos-unstable",
++        "repo": "nixpkgs",
++        "type": "github"
++      }
++    },
++    "nixpkgs_3": {
+       "locked": {
+         "lastModified": 1788431191,
+         "narHash": "sha256-MFClkboDeW56feBCAeAV3Z3J2quGSZFlAOXQ4JjIlIA=",
+@@ -80,17 +111,42 @@
+         "type": "github"
+       }
+     },
++    "plasma-manager": {
++      "inputs": {
++        "home-manager": [
++          "home-manager"
++        ],
++        "nixpkgs": [
++          "nixpkgs"
++        ]
++      },
++      "locked": {
++        "lastModified": 1785762349,
++        "narHash": "sha256-jZhZkzAwc7f3exzcTDJWP2WCAchCv0iNC3UF/QsahdQ=",
++        "owner": "nix-community",
++        "repo": "plasma-manager",
++        "rev": "a19a2a029fa180911bd89c554dca1616e10f4c1d",
++        "type": "github"
++      },
++      "original": {
++        "owner": "nix-community",
++        "repo": "plasma-manager",
++        "type": "github"
++      }
++    },
+     "root": {
+       "inputs": {
+         "flake-parts": "flake-parts",
++        "home-manager": "home-manager",
+         "import-tree": "import-tree",
+-        "nixpkgs": "nixpkgs",
++        "nixpkgs": "nixpkgs_2",
++        "plasma-manager": "plasma-manager",
+         "wrapper-modules": "wrapper-modules"
+       }
+     },
+     "wrapper-modules": {
+       "inputs": {
+-        "nixpkgs": "nixpkgs_2"
++        "nixpkgs": "nixpkgs_3"
+       },
+       "locked": {
+         "lastModified": 1788981141,
+diff --git a/flake.nix b/flake.nix
+index 653c0d2..c6c5cc9 100644
+--- a/flake.nix
++++ b/flake.nix
+@@ -6,7 +6,23 @@
+     import-tree.url = "github:vic/import-tree";
+ 
+     wrapper-modules.url = "github:BirdeeHub/nix-wrapper-modules";
++    home-manager.url = "github:nix-community/home-manager";
++
++    plasma-manager = {
++      url = "github:nix-community/plasma-manager";
++      inputs.nixpkgs.follows = "nixpkgs";
++      inputs.home-manager.follows = "home-manager";
++    };
+   };
++  outputs =
++    inputs:
++    inputs.flake-parts.lib.mkFlake { inherit inputs; } {
++      imports = [
++        # Mendaftarkan dukungan flake.homeModules ke flake-parts
++        inputs.home-manager.flakeModules.home-manager
+ 
+-  outputs = inputs: inputs.flake-parts.lib.mkFlake {inherit inputs;} (inputs.import-tree ./modules);
++        # Auto-import folder modules
++        (inputs.import-tree ./modules)
++      ];
++    };
+ }
+diff --git a/modules/features/apps/browser/default.nix b/modules/features/apps/browser/default.nix
+new file mode 100644
+index 0000000..b0cd3fc
+--- /dev/null
++++ b/modules/features/apps/browser/default.nix
+@@ -0,0 +1,56 @@
++{ ... }: {
++  flake.homeModules.apps-browser = { config, lib, pkgs, ... }: let
++    cfg = config.features.apps.browser;
++
++    defaultDesktopFile =
++      if cfg.default == "firefox" then "firefox.desktop"
++      else if cfg.default == "brave" then "brave-browser.desktop"
++      else "firefox.desktop";
++  in {
++    imports = [
++      ./partials/_firefox.nix
++      ./partials/_brave.nix
++    ];
++
++    options.features.apps.browser = {
++      enable = lib.mkEnableOption "Browser suite with default browser wrapper";
++
++      default = lib.mkOption {
++        type = lib.types.enum [ "firefox" "brave" ];
++        default = "firefox";
++        description = "Default web browser for XDG MIME associations";
++      };
++
++      firefox.enable = lib.mkOption {
++        type = lib.types.bool;
++        default = true;
++        description = "Enable Firefox browser";
++      };
++
++      brave.enable = lib.mkOption {
++        type = lib.types.bool;
++        default = false;
++        description = "Enable Brave browser";
++      };
++    };
++
++    # Wrapper XDG Default Browser
++    config = lib.mkIf cfg.enable {
++      home.sessionVariables = {
++        BROWSER = cfg.default;
++      };
++
++      xdg.mimeApps = {
++        enable = true;
++        defaultApplications = {
++          "text/html" = [ defaultDesktopFile ];
++          "x-scheme-handler/http" = [ defaultDesktopFile ];
++          "x-scheme-handler/https" = [ defaultDesktopFile ];
++          "x-scheme-handler/about" = [ defaultDesktopFile ];
++          "x-scheme-handler/unknown" = [ defaultDesktopFile ];
++          "application/xhtml+xml" = [ defaultDesktopFile ];
++        };
++      };
++    };
++  };
++}
+diff --git a/modules/features/apps/browser/partials/_brave.nix b/modules/features/apps/browser/partials/_brave.nix
+new file mode 100644
+index 0000000..4d90eaa
+--- /dev/null
++++ b/modules/features/apps/browser/partials/_brave.nix
+@@ -0,0 +1,25 @@
++{ config, lib, pkgs, ... }:
++
++let
++  cfg = config.features.apps.browser;
++in {
++  config = lib.mkIf (cfg.enable && cfg.brave.enable) {
++    programs.chromium = {
++      enable = true;
++      package = pkgs.brave;
++
++      extensions = [
++        { id = "cimiefiiaegbelhefglklhhakcgmhkai"; } # Plasma Browser Integration
++        { id = "fopaemeedckajflibkpifppcankfmbhk"; } # Alpine.js DevTools
++        { id = "omghfjlpggmjjaagoclmmobgdodcjboh"; } # Browsec VPN
++      ];
++
++      # Flag command-line untuk mematikan fitur bloatware & fitur yang tidak diinginkan
++      commandLineArgs = [
++        "--disable-metrics"
++        "--no-first-run"
++        "--no-default-browser-check"
++      ];
++    };
++  };
++}
+diff --git a/modules/features/apps/firefox/default.nix b/modules/features/apps/browser/partials/_firefox.nix
+similarity index 92%
+rename from modules/features/apps/firefox/default.nix
+rename to modules/features/apps/browser/partials/_firefox.nix
+index 1dbe869..07f453a 100644
+--- a/modules/features/apps/firefox/default.nix
++++ b/modules/features/apps/browser/partials/_firefox.nix
+@@ -1,5 +1,9 @@
+-{ ... }: {
+-  flake.nixosModules.apps-firefox = { pkgs, ... }: {
++{ config, lib,  ... }:
++
++let
++  cfg = config.features.apps.browser;
++in {
++  config = lib.mkIf (cfg.enable && cfg.firefox.enable) {
+     programs.firefox = {
+       enable = true;
+       languagePacks = [ "id" "en-US" ];
+@@ -15,22 +19,18 @@
+             install_url = "https://addons.mozilla.org/firefox/downloads/latest/ublock-origin/latest.xpi";
+             installation_mode = "force_installed";
+           };
+-
+           "plasma-browser-integration@kde.org" = {
+             install_url = "https://addons.mozilla.org/firefox/downloads/file/4614817/latest.xpi";
+             installation_mode = "force_installed";
+           };
+-
+           "@alpinejs-devtools-pro" = {
+             install_url = "https://addons.mozilla.org/firefox/downloads/file/4848289/latest.xpi";
+             installation_mode = "force_installed";
+           };
+-
+           "helper@savefrom.net" = {
+             install_url = "https://addons.mozilla.org/firefox/downloads/file/4994239/latest.xpi";
+             installation_mode = "force_installed";
+           };
+-
+           "browsec@browsec.com" = {
+             install_url = "https://addons.mozilla.org/firefox/downloads/file/4888986/latest.xpi";
+             installation_mode = "force_installed";
+@@ -41,6 +41,7 @@
+           "browser.contentblocking.category" = { Value = "strict"; Status = "locked"; };
+           "extensions.pocket.enabled" = { Value = false; Status = "locked"; };
+ 
++          # AI Features Disabled
+           "browser.ai.control.default" = { Value = "blocked"; Status = "locked"; };
+           "browser.ai.control.linkPreviewKeyPoints" = { Value = "blocked"; Status = "locked"; };
+           "browser.ai.control.pdfjsAltText" = { Value = "blocked"; Status = "locked"; };
+@@ -50,6 +51,7 @@
+           "browser.ai.control.translations" = { Value = "blocked"; Status = "locked"; };
+           "browser.toolbars.bookmarks.visibility" = { Value = "never"; Status = "locked"; };
+ 
++          # Sidebar & Vertical Tabs
+           "sidebar.revamp" = { Value = true; Status = "locked"; };
+           "sidebar.verticalTabs" = { Value = true; Status = "locked"; };
+           "sidebar.visibility" = { Value = "always-show"; Status = "locked"; };
+diff --git a/modules/features/apps/browser/policy/brave.nix b/modules/features/apps/browser/policy/brave.nix
+new file mode 100644
+index 0000000..3150e76
+--- /dev/null
++++ b/modules/features/apps/browser/policy/brave.nix
+@@ -0,0 +1,21 @@
++{ ... }: {
++  # Otomatis terdaftar ke self.nixosModules.system-brave-policy via import-tree
++  flake.nixosModules.system-brave-policy = { config, lib, pkgs, ... }: let
++    cfg = config.modules.system.brave-policy;
++  in {
++    options.modules.system.brave-policy.enable = lib.mkEnableOption "Brave enterprise managed policies (Anti-AI & Anti-Bloatware)";
++
++    # File /etc HANYA akan dibuat jika cfg.enable bernilai TRUE
++    config = lib.mkIf cfg.enable {
++      environment.etc."brave/policies/managed/default.json".text = builtins.toJSON {
++        BraveAIChatEnabled = false;
++        BraveRewardsDisabled = true;
++        BraveWalletDisabled = true;
++        BraveVPNDisabled = true;
++        BraveNewsDisabled = true;
++        MetricsReportingEnabled = false;
++        PromotionsEnabled = false;
++      };
++    };
++  };
++}
+diff --git a/modules/features/apps/communications/default.nix b/modules/features/apps/communications/default.nix
+new file mode 100644
+index 0000000..e18918f
+--- /dev/null
++++ b/modules/features/apps/communications/default.nix
+@@ -0,0 +1,63 @@
++{ ... }: {
++  flake.homeModules.apps-communication =
++    {
++      config,
++      lib,
++      pkgs,
++      ...
++    }:
++    let
++      cfg = config.features.apps.communication;
++    in
++    {
++      options.features.apps.communication = {
++        enable = lib.mkEnableOption "Communication application suite";
++
++        ferdium.enable = lib.mkOption {
++          type = lib.types.bool;
++          default = true;
++          description = "Ferdium multi-service messaging app";
++        };
++        discord.enable = lib.mkOption {
++          type = lib.types.bool;
++          default = false;
++          description = "Discord Client";
++        };
++        slack.enable = lib.mkOption {
++          type = lib.types.bool;
++          default = false;
++          description = "Slack Client";
++        };
++        element.enable = lib.mkOption {
++          type = lib.types.bool;
++          default = false;
++          description = "Element Matrix Client";
++        };
++      };
++
++      config = lib.mkIf cfg.enable {
++        home.packages =
++          with pkgs;
++          (lib.optional cfg.ferdium.enable ferdium)
++          ++ (lib.optional cfg.discord.enable discord)
++          ++ (lib.optional cfg.slack.enable slack)
++          ++ (lib.optional cfg.element.enable element-desktop);
++
++        xdg.configFile = lib.mkMerge [
++          (lib.mkIf cfg.ferdium.enable {
++            "autostart/ferdium.desktop".source = "${pkgs.ferdium}/share/applications/ferdium.desktop";
++          })
++          (lib.mkIf cfg.discord.enable {
++            "autostart/discord.desktop".source = "${pkgs.discord}/share/applications/discord.desktop";
++          })
++          (lib.mkIf cfg.slack.enable {
++            "autostart/slack.desktop".source = "${pkgs.slack}/share/applications/slack.desktop";
++          })
++          (lib.mkIf cfg.element.enable {
++            "autostart/element.desktop".source =
++              "${pkgs.element-desktop}/share/applications/element-desktop.desktop";
++          })
++        ];
++      };
++    };
++}
+diff --git a/modules/features/apps/games/default.nix b/modules/features/apps/games/default.nix
+new file mode 100644
+index 0000000..a957fae
+--- /dev/null
++++ b/modules/features/apps/games/default.nix
+@@ -0,0 +1,65 @@
++{ ... }: {
++  flake.nixosModules.gaming =
++    {
++      config,
++      lib,
++      pkgs,
++      ...
++    }:
++    let
++      cfg = config.modules.gaming;
++    in
++    {
++      options.modules.gaming = {
++        enable = lib.mkEnableOption "Gaming environment (Steam, GameMode, Lutris, MangoHud)";
++
++        steam.enable = lib.mkOption {
++          type = lib.types.bool;
++          default = true;
++          description = "Enable Steam client and system-level integrations";
++        };
++
++        gamemode.enable = lib.mkOption {
++          type = lib.types.bool;
++          default = true;
++          description = "Enable Feral GameMode optimization daemon";
++        };
++
++        extraTools.enable = lib.mkOption {
++          type = lib.types.bool;
++          default = true;
++          description = "Enable Lutris, ProtonUp-Qt, and MangoHud";
++        };
++      };
++
++      config = lib.mkIf cfg.enable {
++        programs.steam = lib.mkIf cfg.steam.enable {
++          enable = true;
++          remotePlay.openFirewall = true;
++          dedicatedServer.openFirewall = true;
++          localNetworkGameTransfers.openFirewall = true;
++          protontricks.enable = true;
++          gamescopeSession.enable = true;
++
++          extraPackages = with pkgs; [
++            protonup-qt
++            mangohud
++            kdePackages.breeze
++          ];
++        };
++
++        programs.gamemode.enable = cfg.gamemode.enable;
++
++        systemd.user.services.steam-autostart = {
++          description = "Start Steam automatically on login";
++          wantedBy = [ "graphical-session.target" ];
++          after = [ "graphical-session.target" ];
++          partOf = [ "graphical-session.target" ];
++          serviceConfig = {
++            ExecStart = "${pkgs.steam}/bin/steam -silent";
++            Restart = "on-failure";
++          };
++        };
++      };
++    };
++}
+diff --git a/modules/features/apps/games/lutris.nix b/modules/features/apps/games/lutris.nix
+new file mode 100644
+index 0000000..de0689c
+--- /dev/null
++++ b/modules/features/apps/games/lutris.nix
+@@ -0,0 +1,35 @@
++{ ... }: {
++  flake.homeModules.apps-lutris =
++    {
++      config,
++      lib,
++      pkgs,
++      ...
++    }:
++    let
++      cfg = config.features.apps.lutris;
++    in
++    {
++      options.features.apps.lutris = {
++        enable = lib.mkEnableOption "Lutris game launcher with custom Wine/Proton";
++
++        useProtonGE = lib.mkOption {
++          type = lib.types.bool;
++          default = true;
++          description = "Use proton-ge-bin as default Wine package for Lutris";
++        };
++      };
++
++      config = lib.mkIf cfg.enable {
++        programs.lutris = {
++          enable = true;
++          defaultWinePackage = lib.mkIf cfg.useProtonGE pkgs.proton-ge-bin;
++        };
++
++        home.packages = with pkgs; [
++          protonup-qt
++          mangohud
++        ];
++      };
++    };
++}
+diff --git a/modules/features/apps/haruna-player/default.nix b/modules/features/apps/haruna-player/default.nix
+deleted file mode 100644
+index 9573c93..0000000
+--- a/modules/features/apps/haruna-player/default.nix
++++ /dev/null
+@@ -1,27 +0,0 @@
+-# modules/features/apps/haruna/default.nix
+-{ ... }: {
+-  flake.nixosModules.apps-haruna = { config, pkgs, ... }: {
+-    environment.systemPackages = with pkgs; [
+-      haruna
+-      mpv
+-    ];
+-
+-    system.userActivationScripts.harunaConfig = {
+-      text = ''
+-        HARUNA_DIR="${config.users.users.syarif.home}/.config/haruna"
+-        mkdir -p "$HARUNA_DIR"
+-
+-        # Membaca isi dari folder dotfiles/
+-        cat <<'EOF' > "$HARUNA_DIR/mpv.conf"
+-${builtins.readFile ./dotfiles/mpv.conf}
+-EOF
+-
+-        cat <<'EOF' > "$HARUNA_DIR/haruna.conf"
+-${builtins.readFile ./dotfiles/haruna.conf}
+-EOF
+-
+-        chown -R syarif:users "$HARUNA_DIR"
+-      '';
+-    };
+-  };
+-}
+diff --git a/modules/features/apps/haruna-player/dotfiles/haruna.conf b/modules/features/apps/haruna-player/dotfiles/haruna.conf
+deleted file mode 100644
+index e6f2518..0000000
+--- a/modules/features/apps/haruna-player/dotfiles/haruna.conf
++++ /dev/null
+@@ -1,13 +0,0 @@
+-[General]
+-useBreezeIconTheme=true
+-useSystemTitleBar=false
+-hideHeaderBarOnMouseHide=true
+-rememberWindowSize=true
+-
+-[Video]
+-pauseOnMinimize=true
+-
+-[Subtitles]
+-subFont=Sans Serif
+-subFontSize=20
+-subColor=#FFFF00
+diff --git a/modules/features/apps/haruna-player/dotfiles/mpv.conf b/modules/features/apps/haruna-player/dotfiles/mpv.conf
+deleted file mode 100644
+index fc3f5fa..0000000
+--- a/modules/features/apps/haruna-player/dotfiles/mpv.conf
++++ /dev/null
+@@ -1,24 +0,0 @@
+-# Hardware Acceleration
+-hwdec=auto-safe
+-vo=gpu-next
+-gpu-api=auto
+-
+-# Presets Kualitas Gambar
+-profile=high-quality
+-scale=eawa_lanczos
+-cscale=eawa_lanczos
+-
+-# Perbaikan Kualitas & Pemutaran
+-dither-depth=auto
+-deband=yes
+-video-sync=display-resample
+-interpolation=yes
+-tscale=oversample
+-
+-# Audio & Subtitle Defaults
+-alang=ind,id,eng,en
+-slang=ind,id,eng,en
+-sub-auto=fuzzy
+-sub-font="Sans Serif"
+-sub-font-size=42
+-sub-bold=yes
+diff --git a/modules/features/apps/jetbrains/default.nix b/modules/features/apps/jetbrains/default.nix
+new file mode 100644
+index 0000000..19b818e
+--- /dev/null
++++ b/modules/features/apps/jetbrains/default.nix
+@@ -0,0 +1,46 @@
++{ ... }: {
++  # Otomatis terdaftar ke self.homeModules.apps-jetbrains via flake-parts & import-tree
++  flake.homeModules.apps-jetbrains = { config, lib, pkgs, ... }: let
++    cfg = config.features.apps.jetbrains;
++  in {
++    options.features.apps.jetbrains = {
++      enable = lib.mkEnableOption "JetBrains IDEs and Android Studio suite";
++
++      # Sub-toggle (Default false agar IDE berat tidak terinstall sekaligus kecuali diaktifkan)
++      android-studio.enable = lib.mkOption {
++        type = lib.types.bool;
++        default = false;
++        description = "Android Studio IDE";
++      };
++      phpstorm.enable = lib.mkOption {
++        type = lib.types.bool;
++        default = false;
++        description = "JetBrains PhpStorm IDE";
++      };
++      goland.enable = lib.mkOption {
++        type = lib.types.bool;
++        default = false;
++        description = "JetBrains GoLand IDE";
++      };
++      datagrip.enable = lib.mkOption {
++        type = lib.types.bool;
++        default = false;
++        description = "JetBrains DataGrip Database IDE";
++      };
++      pycharm.enable = lib.mkOption {
++        type = lib.types.bool;
++        default = false;
++        description = "JetBrains PyCharm Professional IDE";
++      };
++    };
++
++    config = lib.mkIf cfg.enable {
++      home.packages = with pkgs;
++        (lib.optional cfg.android-studio.enable android-studio) ++
++        (lib.optional cfg.phpstorm.enable jetbrains.phpstorm) ++
++        (lib.optional cfg.goland.enable jetbrains.goland) ++
++        (lib.optional cfg.datagrip.enable jetbrains.datagrip) ++
++        (lib.optional cfg.pycharm.enable jetbrains.pycharm-professional);
++    };
++  };
++}
+diff --git a/modules/features/apps/multimedia/default.nix b/modules/features/apps/multimedia/default.nix
+new file mode 100644
+index 0000000..84372b0
+--- /dev/null
++++ b/modules/features/apps/multimedia/default.nix
+@@ -0,0 +1,15 @@
++{ ... }: {
++    # Otomatis terdaftar ke self.homeModules.apps-multimedia via flake-parts
++    flake.homeModules.apps-multimedia = { config, lib, pkgs, ... }: let
++        cfg = config.features.apps.multimedia;
++    in {
++        options.features.apps.multimedia.enable = lib.mkEnableOption "Multimedia application suite";
++
++        config = lib.mkIf cfg.enable {
++            home.packages = with pkgs;[
++                haruna
++                mpv
++            ];
++        };
++    };
++}
+diff --git a/modules/features/cli/default.nix b/modules/features/cli/default.nix
+new file mode 100644
+index 0000000..6d89b70
+--- /dev/null
++++ b/modules/features/cli/default.nix
+@@ -0,0 +1,52 @@
++{ ... }: {
++  # Terdaftar otomatis ke self.homeModules.cli-developer via flake-parts & import-tree
++  flake.homeModules.cli-developer =
++    {
++      config,
++      lib,
++      pkgs,
++      ...
++    }:
++    let
++      cfg = config.features.cli.developer;
++    in
++    {
++      imports = [
++        ./partials/_fish.nix
++        ./partials/_git.nix
++        ./partials/_nvim.nix
++        ./partials/_direnv.nix
++      ];
++
++      options.features.cli.developer = {
++        enable = lib.mkEnableOption "Developer CLI toolchain (Fish, Git, Neovim, Direnv)";
++
++        fish.enable = lib.mkOption {
++          type = lib.types.bool;
++          default = true;
++          description = "Fish Shell";
++        };
++        git.enable = lib.mkOption {
++          type = lib.types.bool;
++          default = true;
++          description = "Git Version Control";
++        };
++        nvim.enable = lib.mkOption {
++          type = lib.types.bool;
++          default = true;
++          description = "Neovim Text Editor";
++        };
++        direnv.enable = lib.mkOption {
++          type = lib.types.bool;
++          default = true;
++          description = "Direnv environment switcher";
++        };
++      };
++
++      config = lib.mkIf cfg.enable {
++        home.packages = [
++          pkgs.devenv
++        ];
++      };
++    };
++}
+diff --git a/modules/features/cli/fish/default.nix b/modules/features/cli/fish/default.nix
+deleted file mode 100644
+index 3e97ee5..0000000
+--- a/modules/features/cli/fish/default.nix
++++ /dev/null
+@@ -1,32 +0,0 @@
+-{ ... }: {
+-  flake.nixosModules.cli-fish = { pkgs, ... }: {
+-    # 1. Enable Fish shell system-wide
+-    programs.fish = {
+-      enable = true;
+-
+-      # Define shell aliases
+-      shellAliases = {
+-        ll = "ls -l";
+-        la = "ls -la";
+-        g = "git";
+-        rebuild = "sudo nixos-rebuild switch";
+-        nixdel= "sudo nix-collect-garbage -d";
+-      };
+-
+-      # Custom Fish abbreviations (expands automatically as you type)
+-      shellAbbrs = {
+-        gs = "git status";
+-        ga = "git add";
+-        gc = "git commit";
+-      };
+-
+-      # Custom functions or raw Fish script executed on interactive shell start
+-      interactiveShellInit = ''
+-        set -g fish_greeting "" # Disable default welcome greeting
+-      '';
+-    };
+-
+-    # 2. Set Fish as the default shell for your user
+-    users.users.syarif.shell = pkgs.fish;
+-  };
+-}
+diff --git a/modules/features/cli/git/default.nix b/modules/features/cli/git/default.nix
+deleted file mode 100644
+index 5b0e0b8..0000000
+--- a/modules/features/cli/git/default.nix
++++ /dev/null
+@@ -1,30 +0,0 @@
+-{ ... }: {
+-  flake.nixosModules.cli-git = { pkgs, config, ... }: {
+-    programs.git = {
+-      enable = true;
+-      config = {
+-        user = {
+-          name = "Syarif Ubaidillah";
+-          email = "ubed56pb@gmail.com";
+-        };
+-        init = {
+-          defaultBranch = "master";
+-        };
+-        pull = {
+-          rebase = true; # Merge on pull by default
+-        };
+-        core = {
+-          editor = "vim";
+-        };
+-      };
+-    };
+-
+-    system.userActivationScripts.gitconfigLink = {
+-      text = ''
+-        if [ ! -f /home/syarif/.gitconfig ]; then
+-          cp ${pkgs.git}/etc/gitconfig ${config.users.users.syarif.home}/.gitconfig
+-        fi
+-      '';
+-    };
+-  };
+-}
+diff --git a/modules/features/cli/nvim/default.nix b/modules/features/cli/nvim/default.nix
+deleted file mode 100644
+index 6b2b47a..0000000
+--- a/modules/features/cli/nvim/default.nix
++++ /dev/null
+@@ -1,8 +0,0 @@
+-{ ... }: {
+-  flake.nixosModules.cli-nvim = { pkgs, lib, ... }: {
+-    programs.neovim = {
+-      enable = true;
+-    };
+-  };
+-} 
+- 
+diff --git a/modules/features/cli/partials/_direnv.nix b/modules/features/cli/partials/_direnv.nix
+new file mode 100644
+index 0000000..b2e9438
+--- /dev/null
++++ b/modules/features/cli/partials/_direnv.nix
+@@ -0,0 +1,14 @@
++{ config, lib, ... }:
++let
++  cfg = config.features.cli.developer;
++in
++{
++    config = lib.mkIf (cfg.enable && cfg.direnv.enable) {
++        programs.direnv = {
++            enable = true;
++            nix-direnv.enable = true;
++            enableFishIntegration = true;
++            silent = true;
++        };
++    };
++}
+diff --git a/modules/features/cli/partials/_fish.nix b/modules/features/cli/partials/_fish.nix
+new file mode 100644
+index 0000000..671c76f
+--- /dev/null
++++ b/modules/features/cli/partials/_fish.nix
+@@ -0,0 +1,52 @@
++{
++  pkgs,
++  config,
++  lib,
++  ...
++}:
++let
++  cfg = config.features.cli.developer;
++in
++{
++    config = lib.mkIf (cfg.enable && cfg.fish.enable) {
++        programs.fish = {
++            enable = true;
++
++            interactiveShellInit = ''
++            set -g fish_greeting ""
++            '';
++
++            shellAliases = {
++                rebuild = "sudo nixos-rebuild switch";
++                nix-clear = "sudo nix-collect-garbage";
++                c = "clear";
++                g = "git";
++                gs = "git status";
++            };
++
++            shellAbbrs = {
++                ga = "git add";
++                gc = "git commit -m";
++                gp = "git push";
++                gpl = "git pull";
++            };
++
++            plugins = [
++                {
++                    name = "z";
++                    src = pkgs.fishPlugins.z.src;
++                }
++                {
++                    name = "colored-man-pages";
++                    src = pkgs.fishPlugins.colored-man-pages.src;
++                }
++            ];
++        };
++
++        # Prompt Starship
++        programs.starship = {
++            enable = true;
++            enableFishIntegration = true;
++        };
++    };
++}
+diff --git a/modules/features/cli/partials/_git.nix b/modules/features/cli/partials/_git.nix
+new file mode 100644
+index 0000000..97898bc
+--- /dev/null
++++ b/modules/features/cli/partials/_git.nix
+@@ -0,0 +1,27 @@
++{ config, lib, ... }:
++let
++  cfg = config.features.cli.developer;
++in
++{
++    config = lib.mkIf (cfg.enable && cfg.git.enable) {
++        programs.git = {
++            enable = true;
++
++            settings = {
++                user = {
++                    name = "Syarif Ubaidillah";
++                    email = "ubed56pb@gmail.com";
++                };
++                init = {
++                    defaultBranch = "master";
++                };
++                pull = {
++                    rebase = true; # Merge on pull dengan rebase secara default
++                };
++                core = {
++                    editor = "vim";
++                };
++            };
++        };
++    };
++}
+diff --git a/modules/features/cli/partials/_nvim.nix b/modules/features/cli/partials/_nvim.nix
+new file mode 100644
+index 0000000..0f768d5
+--- /dev/null
++++ b/modules/features/cli/partials/_nvim.nix
+@@ -0,0 +1,17 @@
++{ config, lib, ... }:
++let
++  cfg = config.features.cli.developer;
++in
++{
++    config = lib.mkIf (cfg.enable && cfg.nvim.enable) {
++        programs.neovim = {
++            enable = true;
++            defaultEditor = true;
++            vimAlias = true;
++            viAlias = true;
++            withNodeJs = true;
++            withPython3 = true;
++            waylandSupport = true;
++        };
++    };
++}
+diff --git a/modules/features/desktop/plasma/default.nix b/modules/features/desktop/plasma/default.nix
+deleted file mode 100644
+index 97295c8..0000000
+--- a/modules/features/desktop/plasma/default.nix
++++ /dev/null
+@@ -1,39 +0,0 @@
+-{ ... }: {
+-  flake.nixosModules.desktop-plasma = { pkgs, ... }: {
+-    # Enable X11 and KDE Plasma 6
+-    services.xserver.enable = true;
+-    services.displayManager.sddm.enable = true;
+-    services.desktopManager.plasma6.enable = true;
+-
+-    # X11 Keymap
+-    services.xserver.xkb = {
+-      layout = "id";
+-      variant = "";
+-    };
+-
+-    # Enable Printing
+-    services.printing.enable = true;
+-
+-    # Ensure Konsole and KDE desktop tools are installed
+-    environment.systemPackages = with pkgs; [
+-      kdePackages.konsole
+-      kdePackages.kate
+-    ];
+-
+-    # Tell Konsole default profile to use $SHELL (User's configured default shell)
+-    environment.etc."xdg/konsolerc".text = ''
+-      [Desktop Entry]
+-      DefaultProfile=Profile 1.profile
+-
+-      [Favorite Profiles]
+-      Favorites=Profile 1.profile
+-    '';
+-
+-    environment.etc."xdg/konsole/Profile 1.profile".text = ''
+-      [General]
+-      Name=Profile 1
+-      Parent=FALLBACK/
+-      Command=/run/current-system/sw/bin/fish
+-    '';
+-  };
+-}
+diff --git a/modules/features/devkit/webserver/default.nix b/modules/features/devkit/webserver/default.nix
+new file mode 100644
+index 0000000..79a58b1
+--- /dev/null
++++ b/modules/features/devkit/webserver/default.nix
+@@ -0,0 +1,64 @@
++{ ... }: {
++  flake.nixosModules.devkit-webserver = { config, lib, pkgs, ... }: let
++    cfg = config.modules.devkit.webserver;
++  in {
++    options.modules.devkit.webserver = {
++      enable = lib.mkEnableOption "Local Web Development Environment (Apache, MariaDB, Dnsmasq for *.test)";
++
++      mainUser = lib.mkOption {
++        type = lib.types.str;
++        default = "syarif";
++        description = "Primary user to be granted wwwrun and mysql group permissions";
++      };
++    };
++
++    config = lib.mkIf cfg.enable {
++      services = {
++        httpd = {
++          enable = true;
++          adminAddr = "admin@localhost";
++          enablePHP = true;
++
++          virtualHosts = {
++            "syarif.test" = {
++              documentRoot = "/var/www/syarif.test";
++              locations."/".index = "index.php index.html";
++            };
++          };
++        };
++
++        mysql = {
++          enable = true;
++          package = pkgs.mariadb;
++        };
++
++        dnsmasq = {
++          enable = true;
++          settings = {
++            address = [
++              "/.test/127.0.0.1"
++              "/.test/::1"
++            ];
++            interface = "lo";
++            bind-interfaces = true;
++            no-dhcp-interface = "lo";
++          };
++        };
++      };
++
++      # Hak akses user utama ke grup webserver & database
++      users.users.${cfg.mainUser}.extraGroups = [ "mysql" "wwwrun" ];
++
++      # Routing DNS lokal & Firewall
++      networking.nameservers = [ "127.0.0.1" "::1" ];
++      networking.firewall.allowedTCPPorts = [ 80 443 ];
++
++      # Membuat direktori web root dan file test index.php secara otomatis
++      systemd.tmpfiles.rules = [
++        "d /var/www 0755 wwwrun wwwrun -"
++        "d /var/www/syarif.test 0775 wwwrun wwwrun -"
++        "f /var/www/syarif.test/index.php 0664 wwwrun wwwrun - <?php phpinfo();"
++      ];
++    };
++  };
++}
+diff --git a/modules/features/system/users.nix b/modules/features/system/users.nix
+deleted file mode 100644
+index 627443f..0000000
+--- a/modules/features/system/users.nix
++++ /dev/null
+@@ -1,9 +0,0 @@
+-{ ... }: {
+-  flake.nixosModules.system-users = { pkgs, ... }: {
+-    users.users.syarif = {
+-      isNormalUser = true;
+-      description = "Syarif Ubaidillah";
+-      extraGroups = [ "networkmanager" "wheel" ];
+-    };
+-  };
+-}
+diff --git a/modules/home/profile-syarif.nix b/modules/home/profile-syarif.nix
+new file mode 100644
+index 0000000..1e3349f
+--- /dev/null
++++ b/modules/home/profile-syarif.nix
+@@ -0,0 +1,18 @@
++{ ... }: {
++  flake.homeModules.profile-syarif = { ... }: {
++    home.username = "syarif";
++    home.homeDirectory = "/home/syarif";
++    home.stateVersion = "26.05";
++
++    features.apps.browser.enable = true;
++    features.apps.multimedia.enable = true;
++    features.apps.lutris.enable = true;
++    features.apps.communication.enable = true;
++    features.apps.jetbrains = {
++      enable = true;
++      phpstorm.enable = true;
++      datagrip.enable = true;
++    };
++    features.cli.developer.enable = true;
++  };
++}
+diff --git a/modules/hosts/pc-a520m/configuration.nix b/modules/hosts/pc-a520m/configuration.nix
+deleted file mode 100644
+index 85747c4..0000000
+--- a/modules/hosts/pc-a520m/configuration.nix
++++ /dev/null
+@@ -1,60 +0,0 @@
+-{ self, ... }: {
+-
+-  flake.nixosModules.a520MConfiguration = { pkgs, ... }: {
+-    imports = [
+-      # Hardware
+-      self.nixosModules.a520MHardware
+-
+-      # System
+-      self.nixosModules.desktop-plasma
+-      self.nixosModules.system-audio
+-      self.nixosModules.system-users
+-
+-      # Apps
+-      self.nixosModules.cli-fish
+-      self.nixosModules.cli-git
+-      self.nixosModules.cli-nvim
+-      self.nixosModules.apps-firefox
+-      self.nixosModules.apps-haruna
+-    ];
+-
+-    # Bootloader Setup
+-    boot.loader.systemd-boot.enable = true;
+-    boot.loader.efi.canTouchEfiVariables = true;
+-    boot.loader.grub.enable = false;
+-
+-    # Kernel & Host Settings
+-    boot.kernelPackages = pkgs.linuxPackages_latest;
+-    networking.hostName = "pc-a520m";
+-    networking.networkmanager.enable = true;
+-
+-    # Locale & Timezone
+-    time.timeZone = "Asia/Jakarta";
+-    i18n.defaultLocale = "id_ID.UTF-8";
+-
+-    # Ensure Konsole and KDE desktop tools are installed
+-    environment.systemPackages = with pkgs; [
+-      nil
+-    ];
+-
+-    # System Packages & Nix Settings
+-    nixpkgs.config.allowUnfree = true;
+-
+-    # Nix settings, auto cleanup and enable flakes
+-    nix = {
+-        settings.auto-optimise-store = true;
+-        settings.allowed-users = [ "syarif" ];
+-        settings.experimental-features = [ "nix-command" "flakes" ];
+-        gc = {
+-            automatic = true;
+-            dates = "weekly";
+-            options = "--delete-older-than 7d";
+-        };
+-    };
+-
+-
+-    system.stateVersion = "26.05";
+-  };
+-
+-}
+-
+diff --git a/modules/hosts/pc-a520m/default.nix b/modules/hosts/pc-a520m/default.nix
+index 94873b2..9fa0e9c 100644
+--- a/modules/hosts/pc-a520m/default.nix
++++ b/modules/hosts/pc-a520m/default.nix
+@@ -1,7 +1,15 @@
+ { self, inputs, ... }: {
+   flake.nixosConfigurations.a520M = inputs.nixpkgs.lib.nixosSystem {
+     modules = [
+-      self.nixosModules.a520MConfiguration
++      { imports = builtins.attrValues self.nixosModules; }
++
++      ({ ... }: {
++        modules.gaming.enable = true;
++        modules.devkit.webserver.enable = true;
++
++        networking.hostName = "pc-a520m";
++        system.stateVersion = "26.05";
++      })
+     ];
+   };
+ }
+diff --git a/modules/hosts/pc-a520m/hardware.nix b/modules/hosts/pc-a520m/hardware.nix
+index fb45977..7a71a96 100644
+--- a/modules/hosts/pc-a520m/hardware.nix
++++ b/modules/hosts/pc-a520m/hardware.nix
+@@ -1,33 +1,38 @@
+ # Do not modify this file!  It was generated by ‘nixos-generate-config’
+ # and may be overwritten by future invocations.  Please make changes
+ # to /etc/nixos/configuration.nix instead.
+-{ self, ... }:
+ 
+-{
+-  flake.nixosModules.a520MHardware = { config, lib, pkgs, modulesPath, ...}: {
++{ ... }: {
++  flake.nixosModules.a520MHardware = { config, lib, pkgs, modulesPath, ... }:
++  {
+     imports =
+-    [
+-      (modulesPath + "/installer/scan/not-detected.nix")
+-    ];
++      [ (modulesPath + "/installer/scan/not-detected.nix")
++      ];
+ 
+-    boot.initrd.availableKernelModules = [ "xhci_pci" "ahci" "nvme" "usbhid" "uas" "sd_mod" ];
++    boot.initrd.availableKernelModules = [ "xhci_pci" "ahci" "nvme" "uas" "usbhid" "sd_mod" ];
+     boot.initrd.kernelModules = [ ];
+     boot.kernelModules = [ "kvm-amd" ];
+     boot.extraModulePackages = [ ];
+ 
+     fileSystems."/" =
+-      { device = "/dev/disk/by-uuid/db03026c-a5fc-4c36-9b03-f3502dfbb0d3";
++      { device = "/dev/disk/by-uuid/b502e94f-8f27-4526-8888-7503906131d6";
+         fsType = "btrfs";
+       };
+ 
++    fileSystems."/nix" =
++      { device = "/dev/disk/by-uuid/b502e94f-8f27-4526-8888-7503906131d6";
++        fsType = "btrfs";
++        options = [ "subvol=nix" ];
++      };
++
+     fileSystems."/home" =
+-      { device = "/dev/disk/by-uuid/db03026c-a5fc-4c36-9b03-f3502dfbb0d3";
++      { device = "/dev/disk/by-uuid/b502e94f-8f27-4526-8888-7503906131d6";
+         fsType = "btrfs";
+         options = [ "subvol=home" ];
+       };
+ 
+     fileSystems."/boot" =
+-      { device = "/dev/disk/by-uuid/D1C5-45BC";
++      { device = "/dev/disk/by-uuid/6BB1-DEB7";
+         fsType = "vfat";
+         options = [ "fmask=0077" "dmask=0077" ];
+       };
+@@ -38,12 +43,7 @@
+       };
+ 
+     fileSystems."/mnt/games" =
+-      { device = "/dev/disk/by-uuid/9a60d75d-3156-4acd-b9d7-8bdb4e7488ac";
+-        fsType = "ext4";
+-      };
+-
+-    fileSystems."/nix" =
+-      { device = "/dev/disk/by-uuid/c98f2433-bf74-4af7-b835-d487af19d002";
++      { device = "/dev/disk/by-uuid/78377094-2294-4d7d-9e4e-cc9a279eaba9";
+         fsType = "ext4";
+       };
+ 
+diff --git a/modules/nixos/desktop/plasma/default.nix b/modules/nixos/desktop/plasma/default.nix
+new file mode 100644
+index 0000000..8634e04
+--- /dev/null
++++ b/modules/nixos/desktop/plasma/default.nix
+@@ -0,0 +1,184 @@
++{ ... }: {
++  flake.nixosModules.desktop-plasma =
++    {
++      config,
++      pkgs,
++      lib,
++      ...
++    }:
++    let
++      # Skrip Bash untuk mendeteksi ID D-Bus secara dinamis & apply preset
++      loadPanelColorizerPreset = pkgs.writeShellScriptBin "apply-panel-colorizer" ''
++        sleep 3
++
++        DBUS_SERVICE=$(qdbus | grep colorizer)
++
++        echo "$DBUS_SERVICE" | while read -r SERVICE; do
++            qdbus "$SERVICE" /preset preset ~/.config/panel-colorizer/presets/MyWidgets
++        done
++      '';
++
++      kVitals = pkgs.callPackage ./extensions/applets/_kvitals.nix { };
++
++      # 1. Aplikasi Dasar (Selalu Dipin)
++      baseLaunchers = [
++        "applications:org.kde.dolphin.desktop"
++        "applications:org.kde.konsole.desktop"
++        "applications:systemsettings.desktop"
++      ];
++
++      # 2. Dari Sesama Modul Home Manager (Gunakan `config`)
++      firefoxLauncher = lib.optional (
++        config.home-manager.users.syarif.features.apps.browser.enable or false
++        && config.home-manager.users.syarif.features.apps.browser.firefox.enable or false
++      ) "applications:firefox.desktop";
++
++      braveLauncher = lib.optional (
++        config.home-manager.users.syarif.features.apps.browser.enable or false
++        && config.home-manager.users.syarif.features.apps.browser.brave.enable or false
++      ) "applications:brave-browser.desktop";
++
++      communicationLauncher =
++        lib.optional (config.home-manager.users.syarif.features.apps.communication.enable or false)
++          "applications:ferdium.desktop";
++
++      # 3. Dari Modul NixOS System (Gunakan `osConfig`)
++      steamLauncher = lib.optional (config.modules.gaming.enable or false) "applications:steam.desktop";
++    in
++    {
++      services.xserver.enable = true;
++      services.displayManager.sddm.enable = true;
++      services.desktopManager.plasma6.enable = true;
++
++      environment.systemPackages = with pkgs; [
++        qdiskinfo
++        kdePackages.filelight
++      ];
++
++      programs.partition-manager.enable = true;
++
++      home-manager.users.syarif = {
++
++        home.packages = with pkgs; [
++          plasma-panel-colorizer
++          kVitals
++          (python314.withPackages (
++            ps: with ps; [
++              dbus-python
++              pygobject3
++            ]
++          ))
++        ];
++
++        xdg.configFile."panel-colorizer/presets/MyWidgets/settings.json".source =
++          ./panel-colorizer-settings.json;
++
++        xdg.configFile."autostart/load-panel-preset.desktop".text = ''
++          [Desktop Entry]
++          Type=Application
++          Name=Load Panel Colorizer Preset
++          Exec=${loadPanelColorizerPreset}/bin/apply-panel-colorizer
++          Hidden=false
++          NoDisplay=true
++          X-KDE-AutostartScript=true
++        '';
++
++        programs.plasma = {
++          enable = true;
++
++          workspace = {
++            clickItemTo = "select";
++            lookAndFeel = "org.kde.breezedark.desktop";
++          };
++
++          panels = [
++            {
++              location = "top";
++              height = 36;
++              widgets = [
++                {
++                  name = "org.kde.plasma.kickoff";
++                  config = {
++                    General.icon = "nix-snowflake";
++                  };
++                }
++                "org.kde.plasma.panelspacer"
++                "org.kde.plasma.kvitals"
++                "org.kde.plasma.panelspacer"
++                "org.kde.plasma.systemtray"
++                {
++                  digitalClock = {
++                    date.format = "shortDate";
++                    date.position = "besideTime";
++                    settings = {
++                      Appearance.showDate = false;
++                    };
++                  };
++                }
++                {
++                  name = "luisbocanegra.panel.colorizer";
++                  config = {
++                    General = {
++                      enable = true;
++                      hideWidget = true;
++                    };
++                  };
++                }
++              ];
++            }
++            {
++              location = "bottom";
++              height = 52;
++              lengthMode = "fit";
++              hiding = "dodgewindows";
++              floating = true;
++              widgets = [
++                {
++                  iconTasks = {
++                    launchers =
++                      baseLaunchers ++ firefoxLauncher ++ braveLauncher ++ communicationLauncher ++ steamLauncher;
++                  };
++                }
++              ];
++            }
++          ];
++
++          session.sessionRestore.restoreOpenApplicationsOnLogin = "startWithEmptySession";
++
++          # Custom Keybindings / Shortcuts
++          shortcuts = {
++            "ksmserver"."Lock Session" = "Meta+L";
++            "org.kde.spectacle.desktop"."RectangularRegionScreenShot" = "Meta+Shift+S";
++          };
++
++          configFile = {
++            "baloofilerc"."Basic Settings"."Indexing-Enabled" = false;
++            "dolphinrc"."General"."RememberOpenedTabs" = false;
++            "dolphinrc"."MainWindow"."MenuBar" = "Enabled";
++            "kwinrc"."org.kde.kdecoration2"."ButtonsOnLeft" = "SF";
++            "kwinrc"."Desktops"."Number" = {
++              value = 8;
++              # Forces kde to not change this value (even through the settings app).
++              immutable = true;
++            };
++          };
++        };
++
++        programs.konsole = {
++          enable = true;
++          defaultProfile = "Default";
++
++          profiles = {
++            "Default" = {
++              name = "Default";
++              command = "/bin/sh -c $SHELL";
++              font = {
++                name = "fira-code-symbols";
++                size = 10;
++              };
++            };
++          };
++        };
++      };
++    };
++}
+diff --git a/modules/nixos/desktop/plasma/extensions/applets/_kvitals.nix b/modules/nixos/desktop/plasma/extensions/applets/_kvitals.nix
+new file mode 100644
+index 0000000..bd2e512
+--- /dev/null
++++ b/modules/nixos/desktop/plasma/extensions/applets/_kvitals.nix
+@@ -0,0 +1,26 @@
++{
++  stdenvNoCC,
++  fetchFromGitHub,
++  lib,
++  ...
++}:
++stdenvNoCC.mkDerivation {
++  pname = "kvitals";
++  version = "3.2.1";
++
++  src = fetchFromGitHub {
++    owner = "yassine20011";
++    repo = "kvitals";
++    rev = "v3.2.1";
++    hash = "sha256-DnF4dgZZXtnM6+hDneaykaDYopVnEo9CD86NYFCYPGY=";
++  };
++
++  dontBuild = true;
++
++  installPhase = ''
++    runHook preInstall
++    mkdir -p $out/share/plasma/plasmoids/org.kde.plasma.kvitals
++    cp -r * $out/share/plasma/plasmoids/org.kde.plasma.kvitals/
++    runHook postInstall
++  '';
++}
+diff --git a/modules/nixos/desktop/plasma/panel-colorizer-settings.json b/modules/nixos/desktop/plasma/panel-colorizer-settings.json
+new file mode 100644
+index 0000000..ee6dee4
+--- /dev/null
++++ b/modules/nixos/desktop/plasma/panel-colorizer-settings.json
+@@ -0,0 +1,647 @@
++{
++    "globalSettings": {
++        "panel": {
++            "normal": {
++                "enabled": true,
++                "blurBehind": false,
++                "backgroundColor": {
++                    "enabled": true,
++                    "lightnessValue": 0.5,
++                    "saturationValue": 0.5,
++                    "alpha": 1,
++                    "systemColor": "backgroundColor",
++                    "systemColorSet": "Window",
++                    "custom": "#222222",
++                    "list": [
++                        "#ED8796",
++                        "#A6DA95",
++                        "#EED49F",
++                        "#8AADF4",
++                        "#F5BDE6",
++                        "#8BD5CA",
++                        "#f5a97f"
++                    ],
++                    "followColor": 0,
++                    "saturationEnabled": false,
++                    "lightnessEnabled": false,
++                    "animation": {
++                        "enabled": true,
++                        "interval": 3000,
++                        "smoothing": 800
++                    },
++                    "sourceType": 1
++                },
++                "foregroundColor": {
++                    "enabled": false,
++                    "lightnessValue": 0.5,
++                    "saturationValue": 0.5,
++                    "alpha": 1,
++                    "systemColor": "highlightColor",
++                    "systemColorSet": "View",
++                    "custom": "#fc0000",
++                    "list": [
++                        "#ED8796",
++                        "#A6DA95",
++                        "#EED49F",
++                        "#8AADF4",
++                        "#F5BDE6",
++                        "#8BD5CA",
++                        "#f5a97f"
++                    ],
++                    "followColor": 0,
++                    "saturationEnabled": false,
++                    "lightnessEnabled": false,
++                    "animation": {
++                        "enabled": false,
++                        "interval": 3000,
++                        "smoothing": 800
++                    },
++                    "sourceType": 1
++                },
++                "radius": {
++                    "enabled": false,
++                    "corner": {
++                        "topLeft": 5,
++                        "topRight": 5,
++                        "bottomRight": 5,
++                        "bottomLeft": 5
++                    }
++                },
++                "margin": {
++                    "enabled": false,
++                    "side": {
++                        "right": 0,
++                        "left": 0,
++                        "top": 0,
++                        "bottom": 0
++                    }
++                },
++                "padding": {
++                    "enabled": false,
++                    "side": {
++                        "right": 0,
++                        "left": 0,
++                        "top": 0,
++                        "bottom": 0
++                    }
++                },
++                "border": {
++                    "enabled": false,
++                    "customSides": false,
++                    "custom": {
++                        "widths": {
++                            "left": 0,
++                            "bottom": 3,
++                            "right": 0,
++                            "top": 0
++                        },
++                        "margin": {
++                            "enabled": false,
++                            "side": {
++                                "right": 0,
++                                "left": 0,
++                                "top": 0,
++                                "bottom": 0
++                            }
++                        },
++                        "radius": {
++                            "enabled": false,
++                            "corner": {
++                                "topLeft": 5,
++                                "topRight": 5,
++                                "bottomRight": 5,
++                                "bottomLeft": 5
++                            }
++                        }
++                    },
++                    "width": 0,
++                    "color": {
++                        "lightnessValue": 0.5,
++                        "saturationValue": 0.5,
++                        "alpha": 1,
++                        "systemColor": "highlightColor",
++                        "systemColorSet": "View",
++                        "custom": "#ff6c06",
++                        "list": [
++                            "#ED8796",
++                            "#A6DA95",
++                            "#EED49F",
++                            "#8AADF4",
++                            "#F5BDE6",
++                            "#8BD5CA",
++                            "#f5a97f"
++                        ],
++                        "followColor": 0,
++                        "saturationEnabled": false,
++                        "lightnessEnabled": false,
++                        "animation": {
++                            "enabled": false,
++                            "interval": 3000,
++                            "smoothing": 800
++                        },
++                        "sourceType": 1,
++                        "enabled": true
++                    }
++                },
++                "shadow": {
++                    "background": {
++                        "enabled": false,
++                        "color": {
++                            "lightnessValue": 0.5,
++                            "saturationValue": 0.5,
++                            "alpha": 1,
++                            "systemColor": "backgroundColor",
++                            "systemColorSet": "View",
++                            "custom": "#000000",
++                            "list": [
++                                "#ED8796",
++                                "#A6DA95",
++                                "#EED49F",
++                                "#8AADF4",
++                                "#F5BDE6",
++                                "#8BD5CA",
++                                "#f5a97f"
++                            ],
++                            "followColor": 0,
++                            "saturationEnabled": false,
++                            "lightnessEnabled": false,
++                            "animation": {
++                                "enabled": false,
++                                "interval": 3000,
++                                "smoothing": 800
++                            },
++                            "sourceType": 1,
++                            "enabled": true
++                        },
++                        "size": 5,
++                        "xOffset": 0,
++                        "yOffset": 0
++                    },
++                    "foreground": {
++                        "enabled": false,
++                        "color": {
++                            "lightnessValue": 0.5,
++                            "saturationValue": 0.5,
++                            "alpha": 1,
++                            "systemColor": "backgroundColor",
++                            "systemColorSet": "View",
++                            "custom": "#000000",
++                            "list": [
++                                "#ED8796",
++                                "#A6DA95",
++                                "#EED49F",
++                                "#8AADF4",
++                                "#F5BDE6",
++                                "#8BD5CA",
++                                "#f5a97f"
++                            ],
++                            "followColor": 0,
++                            "saturationEnabled": false,
++                            "lightnessEnabled": false,
++                            "animation": {
++                                "enabled": false,
++                                "interval": 3000,
++                                "smoothing": 800
++                            },
++                            "sourceType": 1,
++                            "enabled": true
++                        },
++                        "size": 5,
++                        "xOffset": 0,
++                        "yOffset": 0
++                    }
++                }
++            }
++        },
++        "widgets": {
++            "normal": {
++                "enabled": true,
++                "blurBehind": false,
++                "backgroundColor": {
++                    "enabled": true,
++                    "lightnessValue": 0.5,
++                    "saturationValue": 0.5,
++                    "alpha": 0.1,
++                    "systemColor": "highlightColor",
++                    "systemColorSet": "Window",
++                    "custom": "#ffffff",
++                    "list": [
++                        "#ED8796",
++                        "#A6DA95",
++                        "#EED49F",
++                        "#8AADF4",
++                        "#F5BDE6",
++                        "#8BD5CA",
++                        "#f5a97f"
++                    ],
++                    "followColor": 0,
++                    "saturationEnabled": false,
++                    "lightnessEnabled": false,
++                    "animation": {
++                        "enabled": false,
++                        "interval": 3000,
++                        "smoothing": 800
++                    },
++                    "sourceType": 1
++                },
++                "foregroundColor": {
++                    "enabled": true,
++                    "lightnessValue": 0.3,
++                    "saturationValue": 0.5,
++                    "alpha": 1,
++                    "systemColor": "highlightColor",
++                    "systemColorSet": "Window",
++                    "custom": "#222222",
++                    "list": [
++                        "#ED8796",
++                        "#A6DA95",
++                        "#EED49F",
++                        "#8AADF4",
++                        "#F5BDE6",
++                        "#8BD5CA",
++                        "#f5a97f"
++                    ],
++                    "followColor": 1,
++                    "saturationEnabled": false,
++                    "lightnessEnabled": false,
++                    "animation": {
++                        "enabled": false,
++                        "interval": 3000,
++                        "smoothing": 800
++                    },
++                    "sourceType": 1
++                },
++                "radius": {
++                    "enabled": true,
++                    "corner": {
++                        "topLeft": 8,
++                        "topRight": 8,
++                        "bottomRight": 8,
++                        "bottomLeft": 8
++                    }
++                },
++                "margin": {
++                    "enabled": true,
++                    "side": {
++                        "right": 10,
++                        "left": 10,
++                        "top": 4,
++                        "bottom": 4
++                    }
++                },
++                "spacing": 4,
++                "border": {
++                    "enabled": false,
++                    "customSides": false,
++                    "custom": {
++                        "widths": {
++                            "left": 0,
++                            "bottom": 3,
++                            "right": 0,
++                            "top": 0
++                        },
++                        "margin": {
++                            "enabled": false,
++                            "side": {
++                                "right": 0,
++                                "left": 0,
++                                "top": 0,
++                                "bottom": 0
++                            }
++                        },
++                        "radius": {
++                            "enabled": false,
++                            "corner": {
++                                "topLeft": 5,
++                                "topRight": 5,
++                                "bottomRight": 5,
++                                "bottomLeft": 5
++                            }
++                        }
++                    },
++                    "width": 0,
++                    "color": {
++                        "lightnessValue": 0.5,
++                        "saturationValue": 0.5,
++                        "alpha": 1,
++                        "systemColor": "backgroundColor",
++                        "systemColorSet": "Window",
++                        "custom": "#c4c4c4",
++                        "list": [
++                            "#ED8796",
++                            "#A6DA95",
++                            "#EED49F",
++                            "#8AADF4",
++                            "#F5BDE6",
++                            "#8BD5CA",
++                            "#f5a97f"
++                        ],
++                        "followColor": 0,
++                        "saturationEnabled": false,
++                        "lightnessEnabled": false,
++                        "animation": {
++                            "enabled": false,
++                            "interval": 3000,
++                            "smoothing": 800
++                        },
++                        "sourceType": 0,
++                        "enabled": true
++                    }
++                },
++                "shadow": {
++                    "background": {
++                        "enabled": true,
++                        "color": {
++                            "lightnessValue": 0.5,
++                            "saturationValue": 0.5,
++                            "alpha": 1,
++                            "systemColor": "backgroundColor",
++                            "systemColorSet": "View",
++                            "custom": "#000000",
++                            "list": [
++                                "#ED8796",
++                                "#A6DA95",
++                                "#EED49F",
++                                "#8AADF4",
++                                "#F5BDE6",
++                                "#8BD5CA",
++                                "#f5a97f"
++                            ],
++                            "followColor": 0,
++                            "saturationEnabled": false,
++                            "lightnessEnabled": false,
++                            "animation": {
++                                "enabled": false,
++                                "interval": 3000,
++                                "smoothing": 800
++                            },
++                            "sourceType": 1,
++                            "enabled": true
++                        },
++                        "size": 5,
++                        "xOffset": 0,
++                        "yOffset": 0
++                    },
++                    "foreground": {
++                        "enabled": false,
++                        "color": {
++                            "lightnessValue": 0.5,
++                            "saturationValue": 0.5,
++                            "alpha": 1,
++                            "systemColor": "backgroundColor",
++                            "systemColorSet": "View",
++                            "custom": "#000000",
++                            "list": [
++                                "#ED8796",
++                                "#A6DA95",
++                                "#EED49F",
++                                "#8AADF4",
++                                "#F5BDE6",
++                                "#8BD5CA",
++                                "#f5a97f"
++                            ],
++                            "followColor": 0,
++                            "saturationEnabled": false,
++                            "lightnessEnabled": false,
++                            "animation": {
++                                "enabled": false,
++                                "interval": 3000,
++                                "smoothing": 800
++                            },
++                            "sourceType": 1,
++                            "enabled": true
++                        },
++                        "size": 5,
++                        "xOffset": 0,
++                        "yOffset": 0
++                    }
++                }
++            }
++        },
++        "trayWidgets": {
++            "normal": {
++                "enabled": true,
++                "blurBehind": false,
++                "backgroundColor": {
++                    "enabled": true,
++                    "lightnessValue": 0.5,
++                    "saturationValue": 0.5,
++                    "alpha": 1,
++                    "systemColor": "backgroundColor",
++                    "systemColorSet": "Header",
++                    "custom": "#013eff",
++                    "list": [
++                        "#ED8796",
++                        "#A6DA95",
++                        "#EED49F",
++                        "#8AADF4",
++                        "#F5BDE6",
++                        "#8BD5CA",
++                        "#f5a97f"
++                    ],
++                    "followColor": 0,
++                    "saturationEnabled": false,
++                    "lightnessEnabled": false,
++                    "animation": {
++                        "enabled": false,
++                        "interval": 3000,
++                        "smoothing": 800
++                    },
++                    "sourceType": 1
++                },
++                "foregroundColor": {
++                    "enabled": false,
++                    "lightnessValue": 0.5,
++                    "saturationValue": 0.5,
++                    "alpha": 1,
++                    "systemColor": "textColor",
++                    "systemColorSet": "Window",
++                    "custom": "#fc0000",
++                    "list": [
++                        "#ED8796",
++                        "#A6DA95",
++                        "#EED49F",
++                        "#8AADF4",
++                        "#F5BDE6",
++                        "#8BD5CA",
++                        "#f5a97f"
++                    ],
++                    "followColor": 0,
++                    "saturationEnabled": false,
++                    "lightnessEnabled": false,
++                    "animation": {
++                        "enabled": false,
++                        "interval": 3000,
++                        "smoothing": 800
++                    },
++                    "sourceType": 1
++                },
++                "radius": {
++                    "enabled": true,
++                    "corner": {
++                        "topLeft": 5,
++                        "topRight": 5,
++                        "bottomRight": 5,
++                        "bottomLeft": 5
++                    }
++                },
++                "margin": {
++                    "enabled": true,
++                    "side": {
++                        "right": 2,
++                        "left": 2,
++                        "top": 4,
++                        "bottom": 4
++                    }
++                },
++                "border": {
++                    "enabled": false,
++                    "customSides": false,
++                    "custom": {
++                        "widths": {
++                            "left": 0,
++                            "bottom": 3,
++                            "right": 0,
++                            "top": 0
++                        },
++                        "margin": {
++                            "enabled": false,
++                            "side": {
++                                "right": 0,
++                                "left": 0,
++                                "top": 0,
++                                "bottom": 0
++                            }
++                        },
++                        "radius": {
++                            "enabled": false,
++                            "corner": {
++                                "topLeft": 5,
++                                "topRight": 5,
++                                "bottomRight": 5,
++                                "bottomLeft": 5
++                            }
++                        }
++                    },
++                    "width": 0,
++                    "color": {
++                        "lightnessValue": 0.5,
++                        "saturationValue": 0.5,
++                        "alpha": 1,
++                        "systemColor": "highlightColor",
++                        "systemColorSet": "View",
++                        "custom": "#ff6c06",
++                        "list": [
++                            "#ED8796",
++                            "#A6DA95",
++                            "#EED49F",
++                            "#8AADF4",
++                            "#F5BDE6",
++                            "#8BD5CA",
++                            "#f5a97f"
++                        ],
++                        "followColor": 0,
++                        "saturationEnabled": false,
++                        "lightnessEnabled": false,
++                        "animation": {
++                            "enabled": false,
++                            "interval": 3000,
++                            "smoothing": 800
++                        },
++                        "sourceType": 1,
++                        "enabled": true
++                    }
++                },
++                "shadow": {
++                    "background": {
++                        "enabled": false,
++                        "color": {
++                            "lightnessValue": 0.5,
++                            "saturationValue": 0.5,
++                            "alpha": 1,
++                            "systemColor": "backgroundColor",
++                            "systemColorSet": "View",
++                            "custom": "#000000",
++                            "list": [
++                                "#ED8796",
++                                "#A6DA95",
++                                "#EED49F",
++                                "#8AADF4",
++                                "#F5BDE6",
++                                "#8BD5CA",
++                                "#f5a97f"
++                            ],
++                            "followColor": 0,
++                            "saturationEnabled": false,
++                            "lightnessEnabled": false,
++                            "animation": {
++                                "enabled": false,
++                                "interval": 3000,
++                                "smoothing": 800
++                            },
++                            "sourceType": 1,
++                            "enabled": true
++                        },
++                        "size": 5,
++                        "xOffset": 0,
++                        "yOffset": 0
++                    },
++                    "foreground": {
++                        "enabled": false,
++                        "color": {
++                            "lightnessValue": 0.5,
++                            "saturationValue": 0.5,
++                            "alpha": 1,
++                            "systemColor": "backgroundColor",
++                            "systemColorSet": "View",
++                            "custom": "#000000",
++                            "list": [
++                                "#ED8796",
++                                "#A6DA95",
++                                "#EED49F",
++                                "#8AADF4",
++                                "#F5BDE6",
++                                "#8BD5CA",
++                                "#f5a97f"
++                            ],
++                            "followColor": 0,
++                            "saturationEnabled": false,
++                            "lightnessEnabled": false,
++                            "animation": {
++                                "enabled": false,
++                                "interval": 3000,
++                                "smoothing": 800
++                            },
++                            "sourceType": 1,
++                            "enabled": true
++                        },
++                        "size": 5,
++                        "xOffset": 0,
++                        "yOffset": 0
++                    }
++                }
++            }
++        },
++        "stockPanelSettings": {
++            "position": 3,
++            "alignment": 2,
++            "width": 2,
++            "visibility": 3,
++            "opacity": 2,
++            "floating": false
++        },
++        "configurationOverrides": {
++            "overrides": {},
++            "associations": []
++        },
++        "nativePanel": {
++            "background": {
++                "enabled": true,
++                "opacity": 1,
++                "shadow": false
++            },
++            "floatingDialogs": false,
++            "floatingDialogsAllowOverride": false
++        }
++    }
++}
+diff --git a/modules/features/system/audio.nix b/modules/nixos/system/audio.nix
+similarity index 100%
+rename from modules/features/system/audio.nix
+rename to modules/nixos/system/audio.nix
+diff --git a/modules/nixos/system/bootloader.nix b/modules/nixos/system/bootloader.nix
+new file mode 100644
+index 0000000..8098b57
+--- /dev/null
++++ b/modules/nixos/system/bootloader.nix
+@@ -0,0 +1,15 @@
++{ ... }: {
++  flake.nixosModules.system-bootloader = { pkgs, ... }: {
++    # Bootloader Setup
++    boot.loader = {
++        systemd-boot.enable = false;
++        efi.canTouchEfiVariables = true;
++        grub = {
++            enable = true;
++            efiSupport = true;
++            device = "nodev";
++            theme = "${pkgs.kdePackages.breeze-grub}/grub/themes/breeze";
++        };
++    };
++  };
++}
+diff --git a/modules/nixos/system/core.nix b/modules/nixos/system/core.nix
+new file mode 100644
+index 0000000..a0028a0
+--- /dev/null
++++ b/modules/nixos/system/core.nix
+@@ -0,0 +1,51 @@
++{ ... }: {
++  flake.nixosModules.system-core = { pkgs, ... }: {
++    # System Packages & Nix Settings
++    nixpkgs.config.allowUnfree = true;
++
++    # Locale & Timezone
++    time.timeZone = "Asia/Jakarta";
++    i18n.defaultLocale = "id_ID.UTF-8";
++
++    # Kernel Settings
++    boot.kernel.sysctl."vm.overcommit_memory" = 1;
++    boot.kernelPackages = pkgs.linuxPackages_latest;
++    boot.tmp.cleanOnBoot = true;
++
++    networking = {
++      networkmanager.enable = true;
++      nftables.enable = true;
++      firewall.enable = true;
++    };
++
++    security.polkit.enable = true;
++    security.rtkit.enable = true;
++    security.sudo.enable = true;
++
++    # Ensure core tools are installed
++    environment.systemPackages = with pkgs; [
++      nil
++      zip
++      unzip
++      rar
++      usbutils
++      tree
++      pciutils
++    ];
++
++    # Nix settings, auto cleanup and enable flakes
++    nix = {
++      settings.auto-optimise-store = true;
++      settings.allowed-users = [ "syarif" ];
++      settings.experimental-features = [
++        "nix-command"
++        "flakes"
++      ];
++      gc = {
++        automatic = true;
++        dates = "weekly";
++        options = "--delete-older-than 7d";
++      };
++    };
++  };
++}
+diff --git a/modules/nixos/system/home-manager.nix b/modules/nixos/system/home-manager.nix
+new file mode 100644
+index 0000000..3bdb5cd
+--- /dev/null
++++ b/modules/nixos/system/home-manager.nix
+@@ -0,0 +1,17 @@
++{ inputs, self, ... }: {
++  flake.nixosModules.system-home-manager = { ... }: {
++    imports = [ inputs.home-manager.nixosModules.home-manager ];
++
++    home-manager = {
++      useGlobalPkgs = true;
++      useUserPackages = true;
++      extraSpecialArgs = { inherit inputs self; };
++
++      sharedModules = (builtins.attrValues (self.homeModules or { })) ++ [
++        inputs.plasma-manager.homeModules.plasma-manager
++      ];
++
++      users.syarif = self.homeModules.profile-syarif;
++    };
++  };
++}
+diff --git a/modules/nixos/system/joystick.nix b/modules/nixos/system/joystick.nix
+new file mode 100644
+index 0000000..89b520d
+--- /dev/null
++++ b/modules/nixos/system/joystick.nix
+@@ -0,0 +1,35 @@
++# modules/features/system/joystick.nix
++{ ... }: {
++  flake.nixosModules.system-joystick = { pkgs, ... }: {
++    # 1. Pastikan kernel module terload
++    boot.kernelModules = [ "xpad" "joydev" "uinput" "uhid" ];
++
++    # 2. Paksa xpad untuk meregistrasikan ID Fantech
++    boot.extraModprobeConfig = ''
++      options xpad new_id=0283:0001
++    '';
++
++    hardware.uinput.enable = true;
++
++    environment.systemPackages = with pkgs; [
++      evtest
++      linuxConsoleTools
++      jstest-gtk
++      game-devices-udev-rules
++    ];
++
++    # 3. Rules udev: lepaskan hid-generic, lalu bind ke xpad
++    services.udev.extraRules = ''
++      # Saat dongle 0283:0001 tersambung, unbind dari hid-generic dan rebind ke xpad
++      ACTION=="add", SUBSYSTEM=="usb", ATTR{idVendor}=="0283", ATTR{idProduct}=="0001", RUN+="${pkgs.bash}/bin/bash -c 'echo -n %k > /sys/bus/usb/drivers/hid-generic/unbind 2>/dev/null || true'"
++      ACTION=="add", SUBSYSTEM=="usb", ATTR{idVendor}=="0283", ATTR{idProduct}=="0001", RUN+="${pkgs.kmod}/bin/modprobe xpad", RUN+="${pkgs.bash}/bin/bash -c 'echo 0283 0001 > /sys/bus/usb/drivers/xpad/new_id 2>/dev/null || true'"
++
++      # Hak akses input untuk user
++      SUBSYSTEM=="input", ATTRS{idVendor}=="0283", ATTRS{idProduct}=="0001", MODE="0666", GROUP="input"
++      KERNEL=="event*", ATTRS{idVendor}=="0283", ATTRS{idProduct}=="0001", MODE="0666", GROUP="input"
++      KERNEL=="js*", ATTRS{idVendor}=="0283", ATTRS{idProduct}=="0001", MODE="0666", GROUP="input"
++    '';
++
++    users.users.syarif.extraGroups = [ "input" ];
++  };
++}
+diff --git a/modules/nixos/system/plymouth.nix b/modules/nixos/system/plymouth.nix
+new file mode 100644
+index 0000000..1b425b4
+--- /dev/null
++++ b/modules/nixos/system/plymouth.nix
+@@ -0,0 +1,31 @@
++{ ... }: {
++  flake.nixosModules.system-plymouth = { pkgs, ... }: {
++    boot = {
++      plymouth = {
++        enable = true;
++
++        theme = "breeze";
++
++        themePackages = with pkgs; [
++          kdePackages.breeze-plymouth
++        ];
++      };
++
++      consoleLogLevel = 0;
++      initrd.verbose = false;
++      initrd.kernelModules = [ "amdgpu" ];
++      kernelParams = [
++        "quiet"
++        "splash"
++
++        "fbcon=nodefer"
++        "boot.shell_on_fail"
++        "loglevel=3"
++        "rd.systemd.show_status=false"
++        "rd.udev.log_level=3"
++        "udev.log_priority=3"
++        "vt.global_cursor_default=0"
++      ];
++    };
++  };
++}
+diff --git a/modules/nixos/system/users.nix b/modules/nixos/system/users.nix
+new file mode 100644
+index 0000000..aa49666
+--- /dev/null
++++ b/modules/nixos/system/users.nix
+@@ -0,0 +1,18 @@
++{ ... }: {
++  # Terdaftar otomatis ke self.nixosModules.system-users via import-tree
++  flake.nixosModules.system-users = { pkgs, ... }: {
++    programs.fish.enable = true;
++    users.users.syarif = {
++      isNormalUser = true;
++      description = "Syarif";
++      extraGroups = [
++        "networkmanager"
++        "wheel"
++        "audio"
++        "video"
++        "input"
++      ];
++      shell = pkgs.fish;
++    };
++  };
++}
