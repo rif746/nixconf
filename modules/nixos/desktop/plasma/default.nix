@@ -7,27 +7,14 @@
       ...
     }:
     let
-      # Skrip Bash untuk mendeteksi ID D-Bus secara dinamis & apply preset
-      loadPanelColorizerPreset = pkgs.writeShellScriptBin "apply-panel-colorizer" ''
-        sleep 3
-
-        DBUS_SERVICE=$(qdbus | grep colorizer)
-
-        echo "$DBUS_SERVICE" | while read -r SERVICE; do
-            qdbus "$SERVICE" /preset preset ~/.config/panel-colorizer/presets/MyWidgets
-        done
-      '';
-
       kVitals = pkgs.callPackage ./extensions/applets/_kvitals.nix { };
 
-      # 1. Aplikasi Dasar (Selalu Dipin)
       baseLaunchers = [
         "applications:org.kde.dolphin.desktop"
         "applications:org.kde.konsole.desktop"
         "applications:systemsettings.desktop"
       ];
 
-      # 2. Dari Sesama Modul Home Manager (Gunakan `config`)
       firefoxLauncher = lib.optional (
         config.home-manager.users.syarif.features.apps.browser.enable or false
         && config.home-manager.users.syarif.features.apps.browser.firefox.enable or false
@@ -42,7 +29,6 @@
         lib.optional (config.home-manager.users.syarif.features.apps.communication.enable or false)
           "applications:ferdium.desktop";
 
-      # 3. Dari Modul NixOS System (Gunakan `osConfig`)
       steamLauncher = lib.optional (config.modules.gaming.enable or false) "applications:steam.desktop";
     in
     {
@@ -50,41 +36,41 @@
       services.displayManager.sddm.enable = true;
       services.desktopManager.plasma6.enable = true;
 
-      environment.systemPackages = with pkgs; [
-        qdiskinfo
-        kdePackages.filelight
-      ];
+      environment = {
+
+        systemPackages = with pkgs; [
+          qdiskinfo
+          kdePackages.filelight
+        ];
+      };
 
       programs.partition-manager.enable = true;
 
       home-manager.users.syarif = {
+        home = {
+          file.".local/share/icons/default" = {
+            source = "${pkgs.kdePackages.breeze}/share/icons/breeze_cursors/";
+            recursive = true;
+          };
 
-        home.packages = with pkgs; [
-          plasma-panel-colorizer
-          kVitals
-          (python314.withPackages (
-            ps: with ps; [
-              dbus-python
-              pygobject3
-            ]
-          ))
-        ];
+          packages = with pkgs; [
+            plasma-panel-colorizer
+            kVitals
+            (python314.withPackages (
+              ps: with ps; [
+                dbus-python
+                pygobject3
+              ]
+            ))
+          ];
+        };
 
-        xdg.configFile."panel-colorizer/presets/MyWidgets/settings.json".source =
+        xdg.configFile."panel-colorizer/presets/My Rubik/settings.json".source =
           ./panel-colorizer-settings.json;
-
-        xdg.configFile."autostart/load-panel-preset.desktop".text = ''
-          [Desktop Entry]
-          Type=Application
-          Name=Load Panel Colorizer Preset
-          Exec=${loadPanelColorizerPreset}/bin/apply-panel-colorizer
-          Hidden=false
-          NoDisplay=true
-          X-KDE-AutostartScript=true
-        '';
 
         programs.plasma = {
           enable = true;
+          overrideConfig = true;
 
           workspace = {
             clickItemTo = "select";
@@ -119,9 +105,14 @@
                   name = "luisbocanegra.panel.colorizer";
                   config = {
                     General = {
-                      enable = true;
+                      enabled = true;
                       hideWidget = true;
                       pluginFound=true;
+                      presetAutoloading = builtins.toJSON {
+                        enable = true;
+                        normal = "${pkgs.plasma-panel-colorizer}/share/plasma/plasmoids/luisbocanegra.panel.colorizer/contents/ui/presets/Transparent";
+                        touchingWindow = "/home/syarif/.config/panel-colorizer/presets/My Rubik";
+                      };
                     };
                   };
                 }

@@ -31,6 +31,7 @@
       usbutils
       tree
       pciutils
+      coreutils
     ];
 
     # Nix settings, auto cleanup and enable flakes

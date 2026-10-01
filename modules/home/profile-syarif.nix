@@ -1,5 +1,5 @@
 { ... }: {
-  flake.homeModules.profile-syarif = { ... }: {
+  flake.homeModules.profile-syarif = { pkgs, ... }: {
     home.username = "syarif";
     home.homeDirectory = "/home/syarif";
     home.stateVersion = "26.05";
