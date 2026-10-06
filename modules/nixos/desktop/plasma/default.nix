@@ -29,6 +29,26 @@
         lib.optional (config.home-manager.users.syarif.features.apps.communication.enable or false)
           "applications:ferdium.desktop";
 
+      androidStudioLauncher =
+        lib.optional (config.home-manager.users.syarif.features.apps.jetbrains.android-studio.enable or false)
+          "applications:android-studio.desktop";
+
+      phpStormLauncher =
+        lib.optional (config.home-manager.users.syarif.features.apps.jetbrains.phpstorm.enable or false)
+          "applications:phpstorm.desktop";
+
+      pycharmLauncher =
+        lib.optional (config.home-manager.users.syarif.features.apps.jetbrains.pycharm.enable or false)
+          "applications:pycharm.desktop";
+
+      datagripLauncher =
+        lib.optional (config.home-manager.users.syarif.features.apps.jetbrains.datagrip.enable or false)
+          "applications:datagrip.desktop";
+
+      golandLauncher =
+        lib.optional (config.home-manager.users.syarif.features.apps.jetbrains.goland.enable or false)
+          "applications:goland.desktop";
+
       steamLauncher = lib.optional (config.modules.gaming.enable or false) "applications:steam.desktop";
     in
     {
@@ -128,7 +148,16 @@
                 {
                   iconTasks = {
                     launchers =
-                      baseLaunchers ++ firefoxLauncher ++ braveLauncher ++ communicationLauncher ++ steamLauncher;
+                      baseLaunchers
+                      ++ firefoxLauncher
+                      ++ braveLauncher
+                      ++ communicationLauncher
+                      ++ steamLauncher
+                      ++ androidStudioLauncher
+                      ++ phpStormLauncher
+                      ++ datagripLauncher
+                      ++ pycharmLauncher
+                      ++ golandLauncher;
                   };
                 }
               ];
