@@ -1,4 +1,4 @@
-{ config, lib,  ... }:
+{ config, lib, pkgs,  ... }:
 
 let
   cfg = config.features.apps.browser;
@@ -7,6 +7,10 @@ in {
     programs.firefox = {
       enable = true;
       languagePacks = [ "id" "en-US" ];
+
+      nativeMessagingHosts = [
+        pkgs.kdePackages.plasma-browser-integration
+      ];
 
       policies = {
         DisableTelemetry = true;

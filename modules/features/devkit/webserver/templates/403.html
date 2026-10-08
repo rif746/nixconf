@@ -1,0 +1,47 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>403 - Access Forbidden</title>
+    <style>
+        :root {
+            --bg-color: #0b0f19;
+            --card-bg: #1e293b;
+            --text-main: #f8fafc;
+            --text-muted: #94a3b8;
+            --accent: #f59e0b;
+            --accent-glow: rgba(245, 158, 11, 0.15);
+        }
+        * { box-sizing: border-box; margin: 0; padding: 0; }
+        body {
+            font-family: system-ui, -apple-system, sans-serif;
+            background-color: var(--bg-color);
+            color: var(--text-main);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            min-height: 100vh;
+            overflow: hidden;
+        }
+        .container { text-align: center; position: relative; z-index: 10; padding: 2rem; max-width: 480px; }
+        .error-code { font-size: 8rem; font-weight: 800; background: linear-gradient(135deg, #fcd34d, var(--accent)); -webkit-background-clip: text; -webkit-text-fill-color: transparent; margin-bottom: 1rem; letter-spacing: -0.05em; }
+        .title { font-size: 1.75rem; font-weight: 700; margin-bottom: 0.75rem; }
+        .description { color: var(--text-muted); font-size: 1rem; line-height: 1.6; }
+        .badge { display: inline-flex; align-items: center; gap: 0.5rem; background-color: var(--card-bg); padding: 0.5rem 1rem; border-radius: 9999px; font-size: 0.875rem; margin-bottom: 2rem; border: 1px solid rgba(255, 255, 255, 0.05); }
+        .badge-dot { width: 8px; height: 8px; background-color: var(--accent); border-radius: 50%; box-shadow: 0 0 8px var(--accent); }
+        .glow-orb { position: absolute; width: 300px; height: 300px; background: var(--accent-glow); filter: blur(80px); border-radius: 50%; top: 50%; left: 50%; transform: translate(-50%, -50%); }
+    </style>
+</head>
+<body>
+    <div class="glow-orb"></div>
+    <div class="container">
+        <div class="badge"><span class="badge-dot"></span>Permission Blocked</div>
+        <h1 class="error-code">403</h1>
+        <h2 class="title">Access Forbidden</h2>
+        <p class="description">
+            Apache does not have permission to view this directory. Check that your project directory allows search/execution permissions (<code style="color: #fcd34d;">chmod o+x</code>) or confirm your project folder path matches the configuration.
+        </p>
+    </div>
+</body>
+</html>

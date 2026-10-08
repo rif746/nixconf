@@ -11,7 +11,6 @@
     boot.kernel.sysctl."vm.overcommit_memory" = 1;
     boot.kernelPackages = pkgs.linuxPackages_latest;
     boot.tmp.cleanOnBoot = true;
-
     networking = {
       networkmanager.enable = true;
       nftables.enable = true;
