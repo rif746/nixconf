@@ -6,6 +6,7 @@
       ({ ... }: {
         modules.gaming.enable = true;
         modules.devkit.webserver.enable = true;
+        modules.desktop.plasma.enable = true;
 
         networking.hostName = "pc-a520m";
         system.stateVersion = "26.05";

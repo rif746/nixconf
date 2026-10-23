@@ -7,6 +7,37 @@
       ...
     }:
     let
+      cfg = config.modules.desktop.plasma;
+    in
+    {
+      options.modules.desktop.plasma = {
+        enable = lib.mkEnableOption "KDE Plasma 6 Desktop Environment";
+      };
+
+      config = lib.mkIf cfg.enable {
+        services.xserver.enable = true;
+        services.displayManager.plasma-login-manager.enable = true;
+        services.desktopManager.plasma6.enable = true;
+
+        environment.systemPackages = with pkgs; [
+          qdiskinfo
+          kdePackages.filelight
+        ];
+
+        programs.partition-manager.enable = true;
+      };
+    };
+
+  flake.homeModules.desktop-plasma =
+    {
+      config,
+      pkgs,
+      lib,
+      osConfig ? { },
+      ...
+    }:
+    let
+      cfg = config.features.desktop.plasma;
       kVitals = pkgs.callPackage ./extensions/applets/_kvitals.nix { };
 
       baseLaunchers = [
@@ -15,58 +46,51 @@
         "applications:systemsettings.desktop"
       ];
 
+      # Mengakses config dari modul home-manager langsung
       firefoxLauncher = lib.optional (
-        config.home-manager.users.syarif.features.apps.browser.enable or false
-        && config.home-manager.users.syarif.features.apps.browser.firefox.enable or false
+        config.features.apps.browser.enable or false
+        && config.features.apps.browser.firefox.enable or false
       ) "applications:firefox.desktop";
 
       braveLauncher = lib.optional (
-        config.home-manager.users.syarif.features.apps.browser.enable or false
-        && config.home-manager.users.syarif.features.apps.browser.brave.enable or false
+        config.features.apps.browser.enable or false
+        && config.features.apps.browser.brave.enable or false
       ) "applications:brave-browser.desktop";
 
-      communicationLauncher =
-        lib.optional (config.home-manager.users.syarif.features.apps.communication.enable or false)
-          "applications:ferdium.desktop";
+      communicationLauncher = lib.optional (
+        config.features.apps.communication.enable or false
+      ) "applications:ferdium.desktop";
 
-      androidStudioLauncher =
-        lib.optional (config.home-manager.users.syarif.features.apps.jetbrains.android-studio.enable or false)
-          "applications:android-studio.desktop";
+      androidStudioLauncher = lib.optional (
+        config.features.apps.jetbrains.android-studio.enable or false
+      ) "applications:android-studio.desktop";
 
-      phpStormLauncher =
-        lib.optional (config.home-manager.users.syarif.features.apps.jetbrains.phpstorm.enable or false)
-          "applications:phpstorm.desktop";
+      phpStormLauncher = lib.optional (
+        config.features.apps.jetbrains.phpstorm.enable or false
+      ) "applications:phpstorm.desktop";
 
-      pycharmLauncher =
-        lib.optional (config.home-manager.users.syarif.features.apps.jetbrains.pycharm.enable or false)
-          "applications:pycharm.desktop";
+      pycharmLauncher = lib.optional (
+        config.features.apps.jetbrains.pycharm.enable or false
+      ) "applications:pycharm.desktop";
 
-      datagripLauncher =
-        lib.optional (config.home-manager.users.syarif.features.apps.jetbrains.datagrip.enable or false)
-          "applications:datagrip.desktop";
+      datagripLauncher = lib.optional (
+        config.features.apps.jetbrains.datagrip.enable or false
+      ) "applications:datagrip.desktop";
 
-      golandLauncher =
-        lib.optional (config.home-manager.users.syarif.features.apps.jetbrains.goland.enable or false)
-          "applications:goland.desktop";
+      golandLauncher = lib.optional (
+        config.features.apps.jetbrains.goland.enable or false
+      ) "applications:goland.desktop";
 
-      steamLauncher = lib.optional (config.modules.gaming.enable or false) "applications:steam.desktop";
+      steamLauncher = lib.optional (
+        osConfig.modules.gaming.enable or false
+      ) "applications:steam.desktop";
     in
     {
-      services.xserver.enable = true;
-      services.displayManager.sddm.enable = true;
-      services.desktopManager.plasma6.enable = true;
-
-      environment = {
-
-        systemPackages = with pkgs; [
-          qdiskinfo
-          kdePackages.filelight
-        ];
+      options.features.desktop.plasma = {
+        enable = lib.mkEnableOption "KDE Plasma 6 Home Manager configuration";
       };
 
-      programs.partition-manager.enable = true;
-
-      home-manager.users.syarif = {
+      config = lib.mkIf cfg.enable {
         home = {
           file.".local/share/icons/default" = {
             source = "${pkgs.kdePackages.breeze}/share/icons/breeze_cursors/";
@@ -127,11 +151,11 @@
                     General = {
                       enabled = true;
                       hideWidget = true;
-                      pluginFound=true;
+                      pluginFound = true;
                       presetAutoloading = builtins.toJSON {
                         enable = true;
                         normal = "${pkgs.plasma-panel-colorizer}/share/plasma/plasmoids/luisbocanegra.panel.colorizer/contents/ui/presets/Transparent";
-                        touchingWindow = "/home/syarif/.config/panel-colorizer/presets/My Rubik";
+                        touchingWindow = "${config.home.homeDirectory}/.config/panel-colorizer/presets/My Rubik";
                       };
                     };
                   };
@@ -166,7 +190,6 @@
 
           session.sessionRestore.restoreOpenApplicationsOnLogin = "startWithEmptySession";
 
-          # Custom Keybindings / Shortcuts
           shortcuts = {
             "ksmserver"."Lock Session" = "Meta+L";
             "org.kde.spectacle.desktop"."RectangularRegionScreenShot" = "Meta+Shift+S";
@@ -179,7 +202,6 @@
             "kwinrc"."org.kde.kdecoration2"."ButtonsOnLeft" = "SF";
             "kwinrc"."Desktops"."Number" = {
               value = 8;
-              # Forces kde to not change this value (even through the settings app).
               immutable = true;
             };
           };

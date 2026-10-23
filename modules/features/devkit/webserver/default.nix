@@ -32,6 +32,7 @@
     config = lib.mkIf cfg.enable {
       environment.systemPackages = [
         (pkgs.writeShellScriptBin "web-link" (builtins.readFile ./scripts/web-link.sh))
+        (pkgs.writeShellScriptBin "web-unlink" (builtins.readFile ./scripts/web-unlink.sh))
 
         pkgs.php83
         pkgs.php85
@@ -45,10 +46,6 @@
 
           ReadWritePaths = [
             "/var/lib/apache-vhosts"
-          ];
-          ReadOnlyPaths = [
-            "/mnt/data"
-            "/var/www"
           ];
         };
       };
@@ -195,6 +192,10 @@
           commands = [
             {
               command = "/run/current-system/sw/bin/systemctl reload httpd";
+              options = [ "NOPASSWD" ];
+            }
+            {
+              command = "/run/current-system/sw/bin/chmod";
               options = [ "NOPASSWD" ];
             }
           ];

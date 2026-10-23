@@ -17,6 +17,11 @@
       firewall.enable = true;
     };
 
+    hardware = {
+      bluetooth.enable = true;
+      graphics.enable = true;
+    };
+
     security.polkit.enable = true;
     security.rtkit.enable = true;
     security.sudo.enable = true;
@@ -24,6 +29,8 @@
     # Ensure core tools are installed
     environment.systemPackages = with pkgs; [
       nil
+      p7zip
+      p7zip-rar
       zip
       unzip
       rar
@@ -31,6 +38,7 @@
       tree
       pciutils
       coreutils
+      gtop
     ];
 
     # Nix settings, auto cleanup and enable flakes
