@@ -41,6 +41,15 @@
           protontricks.enable = true;
           gamescopeSession.enable = true;
 
+          package = pkgs.steam.override {
+            extraPkgs = pkgs: with pkgs; [
+              noto-fonts
+              noto-fonts-cjk-sans
+              noto-fonts-color-emoji
+            ];
+          };
+
+
           fontPackages = with pkgs; [
             noto-fonts
             noto-fonts-cjk-sans
@@ -56,16 +65,17 @@
 
         programs.gamemode.enable = cfg.gamemode.enable;
 
+        # CREATE NATIVE XDG AUTOSTART FOR STEAM
         systemd.user.services.steam-autostart = {
           description = "Start Steam automatically on login";
           wantedBy = [ "graphical-session.target" ];
           after = [ "graphical-session.target" ];
           partOf = [ "graphical-session.target" ];
           serviceConfig = {
-            ExecStart = "${pkgs.steam}/bin/steam -silent";
+            ExecStart = "${config.programs.steam.package}/bin/steam -silent";
             Restart = "on-failure";
           };
         };
-      };
     };
+  };
 }

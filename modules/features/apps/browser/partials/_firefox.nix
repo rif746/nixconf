@@ -45,6 +45,7 @@ in {
           "browser.contentblocking.category" = { Value = "strict"; Status = "locked"; };
           "extensions.pocket.enabled" = { Value = false; Status = "locked"; };
           "browser.newtabpage.activity-stream.showSponsoredTopSites" = { Value = false; Status = "locked"; };
+          "security.enterprise_roots.enabled" = true;
 
           # AI Features Disabled
           "browser.ai.control.default" = { Value = "blocked"; Status = "locked"; };

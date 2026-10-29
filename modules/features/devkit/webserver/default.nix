@@ -1,4 +1,4 @@
-  { ... }: {
+   { ... }: {
   flake.nixosModules.devkit-webserver = { config, lib, pkgs, ... }: let
     cfg = config.modules.devkit.webserver;
 
@@ -18,6 +18,23 @@
         "listen.mode" = "0660";
       };
     };
+
+    certDir = "/var/lib/ssl";
+
+    # Generate CA & SSL Certs di dalam Nix Store secara deterministik saat build
+    devkitCerts = pkgs.runCommand "devkit-certs" {
+      nativeBuildInputs = [ pkgs.mkcert ];
+    } ''
+      mkdir -p $out/ca $out/certs
+      export CAROOT=$out/ca
+
+      # Generate Root CA
+      mkcert -install
+
+      # Generate Wildcard Cert
+      mkcert -cert-file $out/certs/localhost.crt -key-file $out/certs/localhost.key "*.test" "localhost" "127.0.0.1" "::1"
+      mkcert -cert-file $out/certs/mailpit.crt -key-file $out/certs/mailpit.key "mailpit.test" "*.mailpit.test"
+    '';
   in {
     options.modules.devkit.webserver = {
       enable = lib.mkEnableOption "Local Web Development Environment (Apache, MariaDB, Dnsmasq for *.test)";
@@ -27,6 +44,12 @@
         default = "syarif";
         description = "Primary user to be granted wwwrun and mysql group permissions";
       };
+
+      mailpitDomain = lib.mkOption {
+        type = lib.types.str;
+        default = "mailpit.test";
+        description = "Domain name to access Mailpit web UI";
+      };
     };
 
     config = lib.mkIf cfg.enable {
@@ -34,21 +57,29 @@
         (pkgs.writeShellScriptBin "web-link" (builtins.readFile ./scripts/web-link.sh))
         (pkgs.writeShellScriptBin "web-unlink" (builtins.readFile ./scripts/web-unlink.sh))
 
-        pkgs.php83
+        pkgs.mkcert
+        pkgs.nssTools
         pkgs.php85
       ];
 
-      systemd.services.httpd = {
-        serviceConfig = {
-          ProtectHome = lib.mkForce false;
-          ProtectSystem = lib.mkForce false;
-          PrivateTmp = lib.mkForce false;
+      systemd.services = {
+        httpd = {
+          serviceConfig = {
+            ProtectHome = lib.mkForce false;
+            ProtectSystem = lib.mkForce false;
+            PrivateTmp = lib.mkForce false;
 
-          ReadWritePaths = [
-            "/var/lib/apache-vhosts"
-          ];
+            ReadWritePaths = [
+              "/var/lib/apache-vhosts"
+              certDir
+            ];
+          };
         };
       };
+
+      security.pki.certificateFiles = [
+        "${devkitCerts}/ca/rootCA.pem"
+      ];
 
       services = {
         phpfpm.pools = {
@@ -89,6 +120,8 @@
           };
         };
 
+        mailpit.instances.default = {};
+
         redis = {
           vmOverCommit = false;
           servers.default = {
@@ -101,17 +134,26 @@
           enable = true;
           adminAddr = "admin@localhost";
           enablePHP = true;
-          extraModules = [
+
+         extraModules = [
             "rewrite"
             "vhost_alias"
             "alias"
             "proxy"
             "proxy_fcgi"
+            "proxy_http"
+            "proxy_wstunnel"
             "remoteip"
             "headers"
+            "ssl"
           ];
 
-          extraConfig = ''
+         extraConfig = ''
+            Listen 443 https
+            DefaultRuntimeDir "/run/httpd"
+            SSLCertificateFile ${devkitCerts}/certs/localhost.crt
+            SSLCertificateKeyFile ${devkitCerts}/certs/localhost.key
+
             Alias /403.html /var/www/default/403.html
             Alias /500.html /var/www/default/500.html
             Alias /503.html /var/www/default/503.html
@@ -120,31 +162,59 @@
             ErrorDocument 500 /500.html
             ErrorDocument 503 /503.html
 
-            # ====================================================================
-            # MIMIC CLOUDFLARE NETWORK HEADERS
-            # ====================================================================
-            SetEnvIf Request_URI "^" HTTP_CF_RAY=95afc0deb1234567-SUB
-            SetEnvIf Request_URI "^" HTTP_CF_CONNECTING_IP=203.0.113.195
-            SetEnvIf Request_URI "^" HTTP_X_FORWARDED_FOR=203.0.113.195
-            SetEnvIf Request_URI "^" HTTP_CF_IPCOUNTRY=ID
+            # Global HTTP -> HTTPS Redirect for *.test
+            <VirtualHost *:80>
+                ServerAlias *.test localhost
+                RewriteEngine On
+                RewriteCond %{HTTPS} off
+                RewriteRule ^ https://%{HTTP_HOST}%{REQUEST_URI} [R=301,L]
+            </VirtualHost>
 
-            # Tell Apache to trust CF-Connecting-IP as the true visitor IP address
-            RemoteIPHeader CF-Connecting-IP
-            RemoteIPTrustedProxy 127.0.0.1 ::1
+            # Default Fallback VHost (HTTPS)
+            <VirtualHost *:443>
+                ServerName localhost
+                SSLEngine on
+                DocumentRoot "/var/www/default"
 
-            # Inject fake Cloudflare proxy signatures into EVERY incoming local request
-            RequestHeader set CF-Connecting-IP "203.0.113.195"
-            RequestHeader set CF-IPCountry "ID"
-            RequestHeader set CF-RAY "95afc0deb1234567-SUB"
-            RequestHeader set CF-Visitor "{\"scheme\":\"http\"}"
-            # ====================================================================
+               <Directory "/var/www/default">
+                    AllowOverride None
+                    Require all granted
+                </Directory>
+            </VirtualHost>
 
+            # Mailpit SSL Reverse Proxy
+            <VirtualHost *:443>
+                ServerName ${cfg.mailpitDomain}
 
-            <Directory "/home/${cfg.mainUser}">
+               SSLEngine on
+                SSLCertificateFile ${devkitCerts}/certs/mailpit.crt
+                SSLCertificateKeyFile ${devkitCerts}/certs/mailpit.key
+
+               # Matikan ProxyPreserveHost agar Mailpit tidak kebingungan menerima Host: mailpit.test
+                ProxyPreserveHost Off
+
+               # WebSocket Support untuk Real-time Updates (Mailpit UI)
+                RewriteEngine On
+                RewriteCond %{HTTP:Upgrade} =websocket [NC]
+                RewriteRule /(.*)           ws://127.0.0.1:8025/$1 [P,L]
+
+               # HTTP Proxy Mapping
+                ProxyPass / http://127.0.0.1:8025/ retry=0 timeout=5
+                ProxyPassReverse / http://127.0.0.1:8025/
+
+               # Mencegah error SSL handshake/proxy pada lingkungan lokal
+                SSLProxyEngine Off
+
+               <Location />
+                    Require all granted
+               </Location>
+             </VirtualHost>
+
+             <Directory "/home/${cfg.mainUser}">
                 Options FollowSymLinks
                 AllowOverride None
                 Require all granted
-            </Directory>
+             </Directory>
 
             <Directory "/home/${cfg.mainUser}/Projects">
                 Options Indexes FollowSymLinks MultiViews
@@ -152,26 +222,16 @@
                 Require all granted
             </Directory>
 
-            <VirtualHost *:80>
-                ServerName localhost
-                DocumentRoot "/var/www/default"
-
-                <Directory "/var/www/default">
-                    AllowOverride None
-                    Require all granted
-                </Directory>
-            </VirtualHost>
-
-            IncludeOptional /var/lib/apache-vhosts/*.conf
+           IncludeOptional /var/lib/apache-vhosts/*.conf
           '';
         };
 
-        mysql = {
+       mysql = {
           enable = true;
           package = pkgs.mariadb;
         };
 
-        dnsmasq = {
+       dnsmasq = {
           enable = true;
           settings = {
             address = [
@@ -203,9 +263,17 @@
       ];
 
       networking.nameservers = [ "127.0.0.1" "::1" ];
-      networking.firewall.allowedTCPPorts = [ 80 443 ];
+      networking.firewall.allowedTCPPorts = [ 80 443 1025 8025 ];
 
       systemd.tmpfiles.rules = [
+        "d /run/httpd 0755 wwwrun wwwrun -"
+
+        # Direktori SSL nyata yang bisa ditulis oleh syarif & wwwrun
+        "d ${certDir} 0775 ${cfg.mainUser} wwwrun -"
+        "d ${certDir}/ca 0775 ${cfg.mainUser} wwwrun -"
+        "L+ ${certDir}/ca/rootCA.pem - - - - ${devkitCerts}/ca/rootCA.pem"
+        "L+ ${certDir}/ca/rootCA-key.pem - - - - ${devkitCerts}/ca/rootCA-key.pem"
+
         "d /var/lib/apache-vhosts 0775 wwwrun wwwrun -"
         "d /var/www 0775 wwwrun wwwrun -"
         "d /var/www/default 0755 wwwrun wwwrun -"
@@ -216,6 +284,9 @@
         "L+ /var/www/default/500.html - - - - ${pkgs.writeText "500.html" (builtins.readFile ./templates/500.html)}"
         "L+ /var/www/default/503.html - - - - ${pkgs.writeText "503.html" (builtins.readFile ./templates/503.html)}"
       ];
+
     };
+
   };
+
 }

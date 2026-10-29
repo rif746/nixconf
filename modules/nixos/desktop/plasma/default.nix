@@ -19,12 +19,16 @@
         services.displayManager.plasma-login-manager.enable = true;
         services.desktopManager.plasma6.enable = true;
 
-        environment.systemPackages = with pkgs; [
-          qdiskinfo
-          kdePackages.filelight
-        ];
+        environment = {
+          systemPackages = with pkgs; [
+            qdiskinfo
+            ctags
+            kdePackages.filelight
+          ];
+        };
 
         programs.partition-manager.enable = true;
+        programs.kde-pim.enable = false;
       };
     };
 

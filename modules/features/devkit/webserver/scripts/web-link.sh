@@ -2,41 +2,18 @@
 set -e
 
 VHOST_DIR="/var/lib/apache-vhosts"
+CERT_DIR="/var/lib/ssl"
+CA_DIR="/var/lib/ssl/ca"
 
-# ====================================================================
-# NEW FEATURE: LIST ACTIVE DOMAINS MODULE
-# ====================================================================
-if [[ "$1" == "--list" ]] || [[ "$1" == "-l" ]]; then
-    echo "========================================================="
-    echo "🌐 ACTIVE VIRTUAL HOST LINKS (*.test)"
-    echo "========================================================="
+# Convert Project name into lowercase
+RAW_PROJECT_NAME=$(basename "$PWD")
+PROJECT_NAME=$(echo "$RAW_PROJECT_NAME" | tr '[:upper:]' '[:lower:]')
 
-    if [ ! -d "$VHOST_DIR" ] || [ -z "$(ls -A "$VHOST_DIR" 2>/dev/null)" ]; then
-        echo " 💡 No project domains linked yet. Run 'web-link' inside a project."
-        echo "========================================================="
-        exit 0
-    fi
-
-    # Read each configuration file and scrape the ServerName and DocumentRoot properties
-    for conf in "$VHOST_DIR"/*.conf; do
-        [ -e "$conf" ] || continue
-
-        # Scrape and trim strings
-        domain=$(grep -i "ServerName" "$conf" | awk '{print $2}' | tr -d '"\r\n')
-        doc_root=$(grep -i "DocumentRoot" "$conf" | awk '{print $2}' | tr -d '"\r\n')
-
-        # Format the layout output
-        printf "🔗 \033[1;34mhttp://%-24s\033[0m -> %s\n" "$domain" "$doc_root"
-    done
-    echo "========================================================="
-    exit 0
-fi
-# ====================================================================
-
-# Standard variables setup for standard binding usage
-PROJECT_NAME=$(basename "$PWD")
 DOMAIN="${PROJECT_NAME}.test"
 CONF_FILE="$VHOST_DIR/${PROJECT_NAME}.conf"
+
+DOMAIN_CRT="${CERT_DIR}/${PROJECT_NAME}.crt"
+DOMAIN_KEY="${CERT_DIR}/${PROJECT_NAME}.key"
 
 if [ -d "$PWD/public" ]; then
     DOC_ROOT="$PWD/public"
@@ -44,19 +21,30 @@ else
     DOC_ROOT="$PWD"
 fi
 
-# Version Detection Selection Engine
 PHP_VERSION="${1:-8.5}"
 
 if [ "$PHP_VERSION" == "8.3" ]; then
     SOCKET_PATH="/run/phpfpm/php83.sock"
-    echo "⚡ Using PHP 8.3 (Legacy Pool) handler mapping."
 elif [ "$PHP_VERSION" == "8.5" ]; then
     SOCKET_PATH="/run/phpfpm/php85.sock"
-    echo "🔥 Using PHP 8.5 (Latest Pool) handler mapping."
 else
-    echo "❌ Unknown version selection: $PHP_VERSION. Choose '8.3' or '8.5'."
+    echo "❌ Unknown PHP version selection: $PHP_VERSION."
     exit 1
 fi
+
+# ====================================================================
+# GENERATE SSL CERTIFICATE AS REGULAR USER
+# ====================================================================
+export CAROOT="$CA_DIR"
+
+echo "🔑 Generating dedicated SSL certificate for ${DOMAIN}..."
+mkcert -cert-file "$DOMAIN_CRT" -key-file "$DOMAIN_KEY" "$DOMAIN" "*.$DOMAIN"
+
+# Pastikan file sertifikat dan key dapat dibaca oleh Apache (wwwrun)
+chmod 644 "$DOMAIN_CRT"
+chmod 640 "$DOMAIN_KEY"
+sudo chown :wwwrun "$DOMAIN_CRT" "$DOMAIN_KEY" 2>/dev/null || true
+# ====================================================================
 
 echo "🔒 Configuring parent directory traversal routes..."
 CURRENT_DIR="$PWD"
@@ -66,13 +54,27 @@ while [ "$CURRENT_DIR" != "/" ]; do
 done
 chmod -R g+rX "$PWD"
 
-echo "🔗 Binding ${DOMAIN} to ${DOC_ROOT} using PHP ${PHP_VERSION}..."
+echo "🔗 Binding ${DOMAIN} (HTTPS) to ${DOC_ROOT} using PHP ${PHP_VERSION}..."
 
 cat <<EOF > "$CONF_FILE"
+# HTTP -> HTTPS Redirect VHost
 <VirtualHost *:80>
     ServerName ${DOMAIN}
     ServerAlias *.${DOMAIN}
+
+    RewriteEngine On
+    RewriteRule ^ https://%{HTTP_HOST}%{REQUEST_URI} [R=301,L]
+</VirtualHost>
+
+# Dedicated HTTPS VHost
+<VirtualHost *:443>
+    ServerName ${DOMAIN}
+    ServerAlias *.${DOMAIN}
     DocumentRoot "${DOC_ROOT}"
+
+    SSLEngine on
+    SSLCertificateFile ${DOMAIN_CRT}
+    SSLCertificateKeyFile ${DOMAIN_KEY}
 
     <Directory "${DOC_ROOT}">
         Options Indexes FollowSymLinks MultiViews
@@ -88,6 +90,11 @@ cat <<EOF > "$CONF_FILE"
 EOF
 
 echo "🔄 Reloading Apache configuration..."
-sudo systemctl reload httpd
-
-echo "🚀 Success! Your site is live at http://${DOMAIN}"
+if sudo systemctl reload httpd; then
+    echo "🚀 Success! Your site is live at https://${DOMAIN}"
+else
+    echo "❌ Apache reload failed! Cleaning invalid VirtualHost..."
+    rm -f "$CONF_FILE" "$DOMAIN_CRT" "$DOMAIN_KEY"
+    sudo systemctl reload httpd || true
+    exit 1
+fi
