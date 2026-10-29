@@ -3,7 +3,7 @@
     cfg = config.modules.devkit.webserver;
 
     mkPhpPool = version: {
-      user = cfg.mainUser; # Runs as 'syarif' so you never get permission blocks
+      user = user; # Runs as 'syarif' so you never get permission blocks
       group = "users";     # Matches your /mnt/data drive group profile
       settings = {
         "pm" = "dynamic";
@@ -20,6 +20,7 @@
     };
 
     certDir = "/var/lib/ssl";
+    user = config.system.user.name;
 
     # Generate CA & SSL Certs di dalam Nix Store secara deterministik saat build
     devkitCerts = pkgs.runCommand "devkit-certs" {
@@ -38,12 +39,6 @@
   in {
     options.modules.devkit.webserver = {
       enable = lib.mkEnableOption "Local Web Development Environment (Apache, MariaDB, Dnsmasq for *.test)";
-
-      mainUser = lib.mkOption {
-        type = lib.types.str;
-        default = "syarif";
-        description = "Primary user to be granted wwwrun and mysql group permissions";
-      };
 
       mailpitDomain = lib.mkOption {
         type = lib.types.str;
@@ -71,6 +66,8 @@
 
             ReadWritePaths = [
               "/var/lib/apache-vhosts"
+              "/mnt/data/Project/Web"
+              "/home/${user}"
               certDir
             ];
           };
@@ -162,21 +159,29 @@
             ErrorDocument 500 /500.html
             ErrorDocument 503 /503.html
 
-            # Global HTTP -> HTTPS Redirect for *.test
+            # Default Fallback VHost (HTTP - Port 80)
             <VirtualHost *:80>
-                ServerAlias *.test localhost
-                RewriteEngine On
-                RewriteCond %{HTTPS} off
-                RewriteRule ^ https://%{HTTP_HOST}%{REQUEST_URI} [R=301,L]
-            </VirtualHost>
-
-            # Default Fallback VHost (HTTPS)
-            <VirtualHost *:443>
-                ServerName localhost
-                SSLEngine on
+                ServerName default.test
+                ServerAlias *.test localhost 127.0.0.1
                 DocumentRoot "/var/www/default"
 
-               <Directory "/var/www/default">
+                <Directory "/var/www/default">
+                    AllowOverride None
+                    Require all granted
+                </Directory>
+            </VirtualHost>
+
+            # Default Fallback VHost (HTTPS - Port 443)
+            <VirtualHost *:443>
+                ServerName default.test
+
+                SSLEngine on
+                SSLCertificateFile ${devkitCerts}/certs/localhost.crt
+                SSLCertificateKeyFile ${devkitCerts}/certs/localhost.key
+
+                DocumentRoot "/var/www/default"
+
+                <Directory "/var/www/default">
                     AllowOverride None
                     Require all granted
                 </Directory>
@@ -210,15 +215,15 @@
                </Location>
              </VirtualHost>
 
-             <Directory "/home/${cfg.mainUser}">
-                Options FollowSymLinks
+            <Directory "/var/www">
+                Options Indexes FollowSymLinks
                 AllowOverride None
                 Require all granted
-             </Directory>
+            </Directory>
 
-            <Directory "/home/${cfg.mainUser}/Projects">
-                Options Indexes FollowSymLinks MultiViews
-                AllowOverride All
+            <Directory "/var/www/default">
+                Options Indexes FollowSymLinks
+                AllowOverride None
                 Require all granted
             </Directory>
 
@@ -245,10 +250,10 @@
         };
       };
 
-      users.users.${cfg.mainUser}.extraGroups = [ "mysql" "wwwrun" ];
+      users.users.${user}.extraGroups = [ "mysql" "wwwrun" ];
       security.sudo.extraRules = [
         {
-          users = [ cfg.mainUser ];
+          users = [ user ];
           commands = [
             {
               command = "/run/current-system/sw/bin/systemctl reload httpd";
@@ -269,8 +274,8 @@
         "d /run/httpd 0755 wwwrun wwwrun -"
 
         # Direktori SSL nyata yang bisa ditulis oleh syarif & wwwrun
-        "d ${certDir} 0775 ${cfg.mainUser} wwwrun -"
-        "d ${certDir}/ca 0775 ${cfg.mainUser} wwwrun -"
+        "d ${certDir} 0775 ${user} wwwrun -"
+        "d ${certDir}/ca 0775 ${user} wwwrun -"
         "L+ ${certDir}/ca/rootCA.pem - - - - ${devkitCerts}/ca/rootCA.pem"
         "L+ ${certDir}/ca/rootCA-key.pem - - - - ${devkitCerts}/ca/rootCA-key.pem"
 

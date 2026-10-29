@@ -1,6 +1,7 @@
 { ... }: {
     flake.nixosModules.virtualisation = { config, lib, pkgs, ... }: let
         cfg = config.modules.virtualisation;
+        user = config.system.user.name;
     in {
         options.modules.virtualisation = {
             kvm.enable = lib.mkEnableOption "Kernel-based Virtualisation";
@@ -12,11 +13,6 @@
                     description = "Storage for docker file path";
                 };
             };
-            mainUser = lib.mkOption {
-                type = lib.types.str;
-                default = "syarif";
-                description = "Primary user to be granted libvirtd group permissions";
-            };
         };
 
 
@@ -24,8 +20,14 @@
             virtualisation = {
                 libvirtd = lib.mkIf cfg.kvm.enable {
                     enable = true;
-                    qemu.vhostUserPackages = with pkgs; [ virtiofsd ];
+                    qemu = {
+                        runAsRoot = true;
+                        swtpm.enable = true;
+                        vhostUserPackages = with pkgs; [ virtiofsd ];
+                    };
                 };
+
+                spiceUSBRedirection.enable = cfg.kvm.enable;
 
                 docker = lib.mkIf cfg.docker.enable {
                     enable = true;
@@ -49,10 +51,9 @@
 
             programs.virt-manager.enable = cfg.kvm.enable;
 
-
             services.qemuGuest.enable = cfg.kvm.enable;
             services.spice-vdagentd.enable = cfg.kvm.enable;
-            users.users.${cfg.mainUser}.extraGroups = []  ++
+            users.users.${user}.extraGroups = []  ++
                 (lib.optional cfg.kvm.enable "libvirtd");
             networking.firewall.trustedInterfaces = []  ++
                 (lib.optional cfg.kvm.enable "virbr0");

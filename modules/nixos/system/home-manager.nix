@@ -1,5 +1,5 @@
 { inputs, self, ... }: {
-  flake.nixosModules.system-home-manager = { ... }: {
+  flake.nixosModules.system-home-manager = { config, ... }: {
     imports = [ inputs.home-manager.nixosModules.home-manager ];
 
     home-manager = {
@@ -12,7 +12,7 @@
         inputs.plasma-manager.homeModules.plasma-manager
       ];
 
-      users.syarif = self.homeModules.profile-syarif;
+      users.${config.system.user.name} = self.homeModules.profile-syarif;
     };
   };
 }

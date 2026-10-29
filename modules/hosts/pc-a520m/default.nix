@@ -4,13 +4,16 @@
       { imports = builtins.attrValues self.nixosModules; }
 
       ({ ... }: {
+        system.user = {
+          name = "syarif";
+          description = "Syarif Ubaidillah";
+        };
+
         modules.gaming.enable = true;
         modules.devkit.webserver.enable = true;
         modules.desktop.plasma.enable = true;
         modules.virtualisation = {
-          mainUser = "syarif";
           kvm.enable = true;
-          docker.enable = true;
         };
 
         networking.hostName = "pc-a520m";
