@@ -1,12 +1,21 @@
-{ config, lib, pkgs,  ... }:
+{
+  config,
+  lib,
+  pkgs,
+  ...
+}:
 
 let
   cfg = config.features.apps.browser;
-in {
+in
+{
   config = lib.mkIf (cfg.enable && cfg.firefox.enable) {
     programs.firefox = {
       enable = true;
-      languagePacks = [ "id" "en-US" ];
+      languagePacks = [
+        "id"
+        "en-US"
+      ];
 
       nativeMessagingHosts = [
         pkgs.kdePackages.plasma-browser-integration
@@ -42,26 +51,71 @@ in {
         };
 
         Preferences = {
-          "browser.contentblocking.category" = { Value = "strict"; Status = "locked"; };
-          "extensions.pocket.enabled" = { Value = false; Status = "locked"; };
-          "browser.newtabpage.activity-stream.showSponsoredTopSites" = { Value = false; Status = "locked"; };
+          "browser.contentblocking.category" = {
+            Value = "strict";
+            Status = "locked";
+          };
+          "extensions.pocket.enabled" = {
+            Value = false;
+            Status = "locked";
+          };
+          "browser.newtabpage.activity-stream.showSponsoredTopSites" = {
+            Value = false;
+            Status = "locked";
+          };
           "security.enterprise_roots.enabled" = true;
 
           # AI Features Disabled
-          "browser.ai.control.default" = { Value = "blocked"; Status = "locked"; };
-          "browser.ai.control.linkPreviewKeyPoints" = { Value = "blocked"; Status = "locked"; };
-          "browser.ai.control.pdfjsAltText" = { Value = "blocked"; Status = "locked"; };
-          "browser.ai.control.sidebarChatbot" = { Value = "blocked"; Status = "locked"; };
-          "browser.ai.control.smartTabGroups" = { Value = "blocked"; Status = "locked"; };
-          "browser.ai.control.smartWindow" = { Value = "blocked"; Status = "locked"; };
-          "browser.ai.control.translations" = { Value = "blocked"; Status = "locked"; };
-          "browser.toolbars.bookmarks.visibility" = { Value = "never"; Status = "locked"; };
+          "browser.ai.control.default" = {
+            Value = "blocked";
+            Status = "locked";
+          };
+          "browser.ai.control.linkPreviewKeyPoints" = {
+            Value = "blocked";
+            Status = "locked";
+          };
+          "browser.ai.control.pdfjsAltText" = {
+            Value = "blocked";
+            Status = "locked";
+          };
+          "browser.ai.control.sidebarChatbot" = {
+            Value = "blocked";
+            Status = "locked";
+          };
+          "browser.ai.control.smartTabGroups" = {
+            Value = "blocked";
+            Status = "locked";
+          };
+          "browser.ai.control.smartWindow" = {
+            Value = "blocked";
+            Status = "locked";
+          };
+          "browser.ai.control.translations" = {
+            Value = "blocked";
+            Status = "locked";
+          };
+          "browser.toolbars.bookmarks.visibility" = {
+            Value = "never";
+            Status = "locked";
+          };
 
           # Sidebar & Vertical Tabs
-          "sidebar.revamp" = { Value = true; Status = "locked"; };
-          "sidebar.verticalTabs" = { Value = true; Status = "locked"; };
-          "sidebar.visibility" = { Value = "always-show"; Status = "locked"; };
-          "sidebar.main.tools" = { Value = "history,bookmarks,passwords"; Status = "locked"; };
+          "sidebar.revamp" = {
+            Value = true;
+            Status = "locked";
+          };
+          "sidebar.verticalTabs" = {
+            Value = true;
+            Status = "locked";
+          };
+          "sidebar.visibility" = {
+            Value = "always-show";
+            Status = "locked";
+          };
+          "sidebar.main.tools" = {
+            Value = "history,bookmarks,passwords";
+            Status = "locked";
+          };
         };
       };
     };

@@ -3,53 +3,70 @@
 # to /etc/nixos/configuration.nix instead.
 
 { ... }: {
-  flake.nixosModules.a520MHardware = { config, lib, pkgs, modulesPath, ... }:
-  {
-    imports =
-      [ (modulesPath + "/installer/scan/not-detected.nix")
+  flake.nixosModules.a520MHardware =
+    {
+      config,
+      lib,
+      pkgs,
+      modulesPath,
+      ...
+    }:
+    {
+      imports = [
+        (modulesPath + "/installer/scan/not-detected.nix")
       ];
 
-    boot.initrd.availableKernelModules = [ "xhci_pci" "ahci" "nvme" "uas" "usbhid" "sd_mod" ];
-    boot.initrd.kernelModules = [ ];
-    boot.kernelModules = [ "kvm-amd" ];
-    boot.extraModulePackages = [ ];
+      boot.initrd.availableKernelModules = [
+        "xhci_pci"
+        "ahci"
+        "nvme"
+        "uas"
+        "usbhid"
+        "sd_mod"
+      ];
+      boot.initrd.kernelModules = [ ];
+      boot.kernelModules = [ "kvm-amd" ];
+      boot.extraModulePackages = [ ];
 
-    fileSystems."/" =
-      { device = "/dev/disk/by-uuid/b502e94f-8f27-4526-8888-7503906131d6";
+      fileSystems."/" = {
+        device = "/dev/disk/by-uuid/b502e94f-8f27-4526-8888-7503906131d6";
         fsType = "btrfs";
       };
 
-    fileSystems."/nix" =
-      { device = "/dev/disk/by-uuid/b502e94f-8f27-4526-8888-7503906131d6";
+      fileSystems."/nix" = {
+        device = "/dev/disk/by-uuid/b502e94f-8f27-4526-8888-7503906131d6";
         fsType = "btrfs";
         options = [ "subvol=nix" ];
       };
 
-    fileSystems."/home" =
-      { device = "/dev/disk/by-uuid/b502e94f-8f27-4526-8888-7503906131d6";
+      fileSystems."/home" = {
+        device = "/dev/disk/by-uuid/b502e94f-8f27-4526-8888-7503906131d6";
         fsType = "btrfs";
         options = [ "subvol=home" ];
       };
 
-    fileSystems."/boot" =
-      { device = "/dev/disk/by-uuid/6BB1-DEB7";
+      fileSystems."/boot" = {
+        device = "/dev/disk/by-uuid/6BB1-DEB7";
         fsType = "vfat";
-        options = [ "fmask=0077" "dmask=0077" ];
+        options = [
+          "fmask=0077"
+          "dmask=0077"
+        ];
       };
 
-    fileSystems."/mnt/data" =
-      { device = "/dev/disk/by-uuid/b198a58f-18f7-4dd3-a67e-cc1409ef166b";
+      fileSystems."/mnt/data" = {
+        device = "/dev/disk/by-uuid/b198a58f-18f7-4dd3-a67e-cc1409ef166b";
         fsType = "ext4";
       };
 
-    fileSystems."/mnt/games" =
-      { device = "/dev/disk/by-uuid/78377094-2294-4d7d-9e4e-cc9a279eaba9";
+      fileSystems."/mnt/games" = {
+        device = "/dev/disk/by-uuid/78377094-2294-4d7d-9e4e-cc9a279eaba9";
         fsType = "ext4";
       };
 
-    swapDevices = [ ];
+      swapDevices = [ ];
 
-    nixpkgs.hostPlatform = lib.mkDefault "x86_64-linux";
-    hardware.cpu.amd.updateMicrocode = lib.mkDefault config.hardware.enableRedistributableFirmware;
-  };
+      nixpkgs.hostPlatform = lib.mkDefault "x86_64-linux";
+      hardware.cpu.amd.updateMicrocode = lib.mkDefault config.hardware.enableRedistributableFirmware;
+    };
 }

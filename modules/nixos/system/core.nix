@@ -1,59 +1,69 @@
 { ... }: {
-  flake.nixosModules.system-core = { pkgs, ... }: {
-    # System Packages & Nix Settings
-    nixpkgs.config.allowUnfree = true;
+  flake.nixosModules.system-core =
+    {
+      pkgs,
+      config,
+      user,
+      ...
+    }:
+    {
+      # System Packages & Nix Settings
+      nixpkgs.config.allowUnfree = true;
 
-    # Locale & Timezone
-    time.timeZone = "Asia/Jakarta";
-    i18n.defaultLocale = "id_ID.UTF-8";
+      # Locale & Timezone
+      time.timeZone = "Asia/Jakarta";
+      i18n.defaultLocale = "id_ID.UTF-8";
 
-    # Kernel Settings
-    boot.kernel.sysctl."vm.overcommit_memory" = 1;
-    boot.kernelPackages = pkgs.linuxPackages_latest;
-    boot.tmp.cleanOnBoot = true;
-    networking = {
-      networkmanager.enable = true;
-      nftables.enable = true;
-      firewall.enable = true;
-    };
+      networking = {
+        networkmanager.enable = true;
+        nftables.enable = true;
+        firewall.enable = true;
+      };
 
-    hardware = {
-      bluetooth.enable = true;
-      graphics.enable = true;
-    };
+      hardware = {
+        bluetooth.enable = true;
+        graphics.enable = true;
+      };
 
-    security.polkit.enable = true;
-    security.rtkit.enable = true;
-    security.sudo.enable = true;
+      security = {
+        polkit.enable = true;
+        rtkit.enable = true;
+        sudo.enable = true;
+      };
 
-    # Ensure core tools are installed
-    environment.systemPackages = with pkgs; [
-      nil
-      p7zip
-      p7zip-rar
-      zip
-      unzip
-      rar
-      usbutils
-      tree
-      pciutils
-      coreutils
-      gtop
-    ];
-
-    # Nix settings, auto cleanup and enable flakes
-    nix = {
-      settings.auto-optimise-store = true;
-      settings.allowed-users = [ "syarif" ];
-      settings.experimental-features = [
-        "nix-command"
-        "flakes"
+      # Ensure core tools are installed
+      environment.systemPackages = with pkgs; [
+        nixd
+        nixfmt
+        p7zip
+        p7zip-rar
+        zip
+        unzip
+        rar
+        usbutils
+        tree
+        pciutils
+        coreutils
+        haruna
+        mpv
+        gtop
       ];
-      gc = {
-        automatic = true;
-        dates = "weekly";
-        options = "--delete-older-than 7d";
+
+      # Nix settings, auto cleanup and enable flakes
+      nix = {
+        settings = {
+          auto-optimise-store = true;
+          allowed-users = [ user.name ];
+          experimental-features = [
+            "nix-command"
+            "flakes"
+          ];
+        };
+        gc = {
+          automatic = true;
+          dates = "weekly";
+          options = "--delete-older-than 3d";
+        };
       };
     };
-  };
 }

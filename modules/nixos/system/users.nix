@@ -1,26 +1,22 @@
-{ ... }: {
+{ inputs, self, ... }: {
   # Terdaftar otomatis ke self.nixosModules.system-users via import-tree
-  flake.nixosModules.system-users = { config, pkgs, options, lib, ... }: let
-    cfg = config.system.user;
-  in {
-    options.system.user = {
-      name = lib.mkOption{
-        type = lib.types.str;
-        default = "user";
-        description = "Username";
-      };
-      description = lib.mkOption{
-        type = lib.types.str;
-        default = "User";
-        description = "User Description.";
-      };
-    };
+  flake.nixosModules.system-users =
+    {
+      user,
+      config,
+      pkgs,
+      options,
+      lib,
+      ...
+    }:
+    {
+      imports = [ inputs.home-manager.nixosModules.home-manager ];
 
-    config = {
-      programs.fish.enable = true;
-      users.users.${cfg.name} = {
+      programs.${user.shell}.enable = true;
+      users.users.${user.name} = {
         isNormalUser = true;
-        description = cfg.description;
+        description = user.description;
+        initialHashedPassword = user.hashedPassword;
         extraGroups = [
           "networkmanager"
           "wheel"
@@ -28,8 +24,28 @@
           "video"
           "input"
         ];
-        shell = pkgs.fish;
+        shell = pkgs.${user.shell};
+      };
+
+      home-manager = {
+        useGlobalPkgs = true;
+        useUserPackages = true;
+        backupFileExtension = "bak";
+        extraSpecialArgs = { inherit inputs self user; };
+
+        sharedModules = (builtins.attrValues (self.homeModules or { })) ++ [
+          inputs.plasma-manager.homeModules.plasma-manager
+        ];
+
+        users.${user.name} = {
+          imports = [ user.profile ];
+
+          home = {
+            username = user.name;
+            homeDirectory = "/home/${user.name}";
+            stateVersion = "26.05";
+          };
+        };
       };
     };
-  };
 }

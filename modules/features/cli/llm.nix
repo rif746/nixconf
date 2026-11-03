@@ -33,10 +33,11 @@
       };
 
       config = lib.mkIf cfg.enable {
-        home.packages = with inputs.llm-agents.packages.${pkgs.stdenv.hostPlatform.system};
-            (lib.optional cfg.junie.enable junie) ++
-            (lib.optional cfg.opencode.enable opencode) ++
-            (lib.optional cfg.antigravity.enable antigravity-cli);
+        home.packages =
+          with inputs.llm-agents.packages.${pkgs.stdenv.hostPlatform.system};
+          (lib.optional cfg.junie.enable junie)
+          ++ (lib.optional cfg.opencode.enable opencode)
+          ++ (lib.optional cfg.antigravity.enable antigravity-cli);
       };
     };
 }

@@ -1,8 +1,14 @@
-{ config, lib, pkgs, ... }:
+{
+  config,
+  lib,
+  pkgs,
+  ...
+}:
 
 let
   cfg = config.features.apps.browser;
-in {
+in
+{
   config = lib.mkIf (cfg.enable && cfg.brave.enable) {
     programs.chromium = {
       enable = true;

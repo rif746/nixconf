@@ -7,27 +7,27 @@
       ...
     }:
     let
-      cfg = config.modules.gaming;
+      cfg = config.nixos.tools.gaming;
     in
     {
-      options.modules.gaming = {
+      options.nixos.tools.gaming = {
         enable = lib.mkEnableOption "Gaming environment (Steam, GameMode, Lutris, MangoHud)";
 
         steam.enable = lib.mkOption {
           type = lib.types.bool;
-          default = true;
+          default = false;
           description = "Enable Steam client and system-level integrations";
         };
 
-        gamemode.enable = lib.mkOption {
+        steam.useGameMode = lib.mkOption {
           type = lib.types.bool;
-          default = true;
+          default = false;
           description = "Enable Feral GameMode optimization daemon";
         };
 
-        extraTools.enable = lib.mkOption {
+        steam.withExtraTools = lib.mkOption {
           type = lib.types.bool;
-          default = true;
+          default = false;
           description = "Enable Lutris, ProtonUp-Qt, and MangoHud";
         };
       };
@@ -42,13 +42,13 @@
           gamescopeSession.enable = true;
 
           package = pkgs.steam.override {
-            extraPkgs = pkgs: with pkgs; [
-              noto-fonts
-              noto-fonts-cjk-sans
-              noto-fonts-color-emoji
-            ];
+            extraPkgs =
+              pkgs: with pkgs; [
+                noto-fonts
+                noto-fonts-cjk-sans
+                noto-fonts-color-emoji
+              ];
           };
-
 
           fontPackages = with pkgs; [
             noto-fonts
@@ -56,17 +56,17 @@
             noto-fonts-color-emoji
           ];
 
-          extraPackages = with pkgs; [
-            protonup-qt
-            mangohud
-            kdePackages.breeze
-          ];
+          extraPackages =
+            with pkgs;
+            [ kdePackages.breeze ]
+            ++ (lib.optional cfg.steam.withExtraTools protonup-qt)
+            ++ (lib.optional cfg.steam.withExtraTools mangohud);
         };
 
-        programs.gamemode.enable = cfg.gamemode.enable;
+        programs.gamemode.enable = cfg.steam.useGameMode;
 
         # CREATE NATIVE XDG AUTOSTART FOR STEAM
-        systemd.user.services.steam-autostart = {
+        systemd.user.services.steam-autostart = lib.mkIf cfg.steam.enable {
           description = "Start Steam automatically on login";
           wantedBy = [ "graphical-session.target" ];
           after = [ "graphical-session.target" ];
@@ -76,6 +76,6 @@
             Restart = "on-failure";
           };
         };
+      };
     };
-  };
 }
