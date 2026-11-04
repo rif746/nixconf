@@ -38,6 +38,7 @@
       };
     };
     modules = [
+      ./_hardware.nix
       { imports = builtins.attrValues self.nixosModules; }
 
       ({ ... }: {

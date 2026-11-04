@@ -35,12 +35,11 @@ Repositori ini berisi konfigurasi sistem NixOS dan lingkungan pengguna Home Mana
 │   │       ├── shell/             # Main shell module & dynamic _<shell>.nix loader
 │   │       └── vcs.nix            # Version Control System (Git, LazyGit, GitHub CLI)
 │   ├── hosts/                     # Definisi Host / Mesin Spesifik
-│   │   └── pc-a520m/              # Konfigurasi Host AMD A520M & Hardware
+│   │   └── pc-a520m/              # Konfigurasi Host AMD A520M & Hardware (_hardware.nix)
 │   └── nixos/                     # Modul NixOS System-space
 │       ├── desktop/               # Desktop Environment (Plasma 6, DWM)
 │       ├── system/                # Core OS (bootloader, audio, joystick, users)
 │       └── tools/                 # Layanan & Devkit Sistem (webserver, gaming, virt)
-
 ```
 
 ---
@@ -55,6 +54,7 @@ Repositori ini berisi konfigurasi sistem NixOS dan lingkungan pengguna Home Mana
 | `nixos.tools.gaming.enable` | `bool` | Mengaktifkan lingkungan gaming (Steam, GameMode) |
 | `nixos.tools.webserver.enable` | `bool` | Development stack lokal (Apache, PHP 8.3/8.5, MariaDB, Dnsmasq `*.test`) |
 | `nixos.tools.virtualisation.kvm.enable` | `bool` | Virtualisasi KVM / QEMU & Libvirtd |
+| `nixos.tools.virtualisation.docker.enable` | `bool` | Mesin Kontainer Docker |
 
 ### Home Manager (`features.*`)
 
@@ -70,9 +70,29 @@ Repositori ini berisi konfigurasi sistem NixOS dan lingkungan pengguna Home Mana
 
 ## 🚀 Cara Penggunaan
 
-### 1. Build & Switch Konfigurasi
+### 1. Inisialisasi Hardware (Wajib Saat Baru Diclone / Mesin Baru)
 
-Untuk menerapkan perubahan konfigurasi pada mesin `pc-a520m`:
+Setiap mesin (Host/VM) memiliki UUID disk dan modul kernel spesifik. Saat repositori baru di-clone atau hendak menambahkan host baru, **selalu jalankan generasi konfigurasi hardware ke direktori target host**:
+
+```bash
+# 1. Generate konfigurasi hardware langsung ke direktori host spesifik
+sudo nixos-generate-config --dir modules/hosts/<hostname>
+
+# 2. Masuk ke direktori host
+cd modules/hosts/<hostname>
+
+# 3. Ubah nama hardware-configuration.nix menjadi _hardware.nix
+mv hardware-configuration.nix _hardware.nix
+
+# 4. Hapus configuration.nix bawaan hasil generate (agar tidak merusak struktur Flake)
+rm configuration.nix
+```
+
+> **Catatan:** Pastikan modul host (`modules/hosts/<hostname>/default.nix`) melakukan import terhadap `./_hardware.nix`.
+
+### 2. Build & Switch Konfigurasi
+
+Untuk menerapkan perubahan konfigurasi pada mesin (misal `pc-a520m`):
 
 ```bash
 # Menggunakan alias bawaan modul shell:
@@ -80,10 +100,9 @@ rebuild
 
 # Atau perintah NixOS native:
 sudo nixos-rebuild switch --flake .#pc-a520m
-
 ```
 
-### 2. Pembersihan Store (Garbage Collection)
+### 3. Pembersihan Store (Garbage Collection)
 
 ```bash
 # Menggunakan alias bawaan:
@@ -91,17 +110,11 @@ nix-clear
 
 # Atau perintah native:
 sudo nix-collect-garbage -d
-
 ```
 
-### 3. Menambahkan Host Baru
+### 4. Menambahkan Host Baru
 
 1. Buat folder baru di bawah `modules/hosts/<hostname>/`.
-2. Deklarasikan `specialArgs.user` beserta profil fiturnya.
-3. Daftarkan host baru tersebut ke dalam `flake.nix`.
-
----
-
-## 📝 Lisensi
-
-Distributed under the MIT License.
+2. Jalankan langkah **Inisialisasi Hardware** di atas untuk membuat `_hardware.nix`.
+3. Buat `default.nix` di folder host tersebut, lalu deklarasikan `specialArgs.user` beserta profil fiturnya.
+4. Daftarkan host baru tersebut ke dalam `flake.nix`.
