@@ -116,6 +116,57 @@ in
             Value = "history,bookmarks,passwords";
             Status = "locked";
           };
+
+          # Custom Toolbar Placement Layout
+          "browser.uiCustomization.state" = {
+            Value = builtins.toJSON {
+              placements = {
+                widget-overflow-fixed-list = [ ];
+                unified-extensions-area = [
+                  "helper_savefrom_net-browser-action"
+                  "plasma-browser-integration_kde_org-browser-action"
+                  "browsec_browsec_com-browser-action"
+                ];
+                nav-bar = [
+                  "sidebar-button"
+                  "back-button"
+                  "forward-button"
+                  "stop-reload-button"
+                  "urlbar-container"
+                  "unified-extensions-button"
+                  "downloads-button"
+                  "ublock0_raymondhill_net-browser-action"
+                  "panel-menu-button"
+                ];
+                toolbar-menubar = [ "menubar-items" ];
+                TabsToolbar = [ ];
+                vertical-tabs = [ "tabbrowser-tabs" ];
+                PersonalToolbar = [
+                  "import-button"
+                  "personal-bookmarks"
+                ];
+              };
+              seen = [
+                "developer-button"
+                "helper_savefrom_net-browser-action"
+                "plasma-browser-integration_kde_org-browser-action"
+                "browsec_browsec_com-browser-action"
+                "ublock0_raymondhill_net-browser-action"
+                "downloads-button"
+              ];
+              dirtyAreaCache = [
+                "nav-bar"
+                "TabsToolbar"
+                "vertical-tabs"
+                "PersonalToolbar"
+                "unified-extensions-area"
+                "toolbar-menubar"
+              ];
+              currentVersion = 28;
+              newElementCount = 0;
+            };
+            Status = "user";
+          };
         };
       };
     };
