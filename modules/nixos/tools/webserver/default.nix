@@ -10,9 +10,10 @@
     let
       cfg = config.nixos.tools.webserver;
 
+      # 1. VALET STYLE: Jalankan PHP-FPM Worker & Socket langsung sebagai User & Group utama
       mkPhpPool = version: {
         user = user.name;
-        group = "users";
+        group = "users"; # Atau user.name jika group utama sama dengan username
         settings = {
           "pm" = "dynamic";
           "pm.max_children" = 5;
@@ -20,16 +21,15 @@
           "pm.min_spare_servers" = 1;
           "pm.max_spare_servers" = 3;
 
-          # Sockets must be writable by Apache (wwwrun)
-          "listen.owner" = "wwwrun";
-          "listen.group" = "wwwrun";
+          # Socket dimiliki oleh user kamu
+          "listen.owner" = user.name;
+          "listen.group" = "users";
           "listen.mode" = "0660";
         };
       };
 
       certDir = "/var/lib/ssl";
 
-      # Generate CA & SSL Certs
       devkitCerts =
         pkgs.runCommand "devkit-certs"
           {
@@ -39,10 +39,8 @@
             mkdir -p $out/ca $out/certs
             export CAROOT=$out/ca
 
-            # Generate Root CA
             mkcert -install
 
-            # Generate Wildcard Cert
             mkcert -cert-file $out/certs/localhost.crt -key-file $out/certs/localhost.key "*.test" "localhost" "127.0.0.1" "::1"
             mkcert -cert-file $out/certs/mailpit.crt -key-file $out/certs/mailpit.key "mailpit.test" "*.mailpit.test"
           '';
@@ -68,30 +66,15 @@
           pkgs.php
         ];
 
-        systemd.services = {
-          httpd = {
-            serviceConfig = {
-              ProtectHome = lib.mkForce false;
-              ProtectSystem = lib.mkForce false;
-              PrivateTmp = lib.mkForce false;
-
-              ReadWritePaths = [
-                "/var/lib/apache-vhosts"
-                "/mnt/data/Project/Web"
-                "/home/${user.name}"
-                certDir
-              ];
-            };
-          };
-        };
-
         security.pki.certificateFiles = [
           "${devkitCerts}/ca/rootCA.pem"
         ];
 
+        systemd.services.phpfpm-php85.serviceConfig.ProtectHome = lib.mkForce false;
+        systemd.services.phpfpm-php83.serviceConfig.ProtectHome = lib.mkForce false;
+
         services = {
           phpfpm.pools = {
-            # PHP 8.3 Legacy Stack (Socket will sit at /run/phpfpm/php83.sock)
             php83 = (mkPhpPool "8.3") // {
               phpPackage = pkgs.php83.withExtensions (
                 { enabled, all }:
@@ -114,7 +97,6 @@
               );
             };
 
-            # PHP 8.5 Stack (Socket will sit at /run/phpfpm/php85.sock)
             php85 = (mkPhpPool "8.5") // {
               phpPackage = pkgs.php85.withExtensions (
                 { enabled, all }:
@@ -153,6 +135,10 @@
             adminAddr = "admin@localhost";
             enablePHP = true;
 
+            # 2. VALET STYLE: Jalankan Master & Worker Apache sebagai User Kamu!
+            user = user.name;
+            group = "users";
+
             extraModules = [
               "rewrite"
               "vhost_alias"
@@ -171,6 +157,13 @@
                DefaultRuntimeDir "/run/httpd"
                SSLCertificateFile ${devkitCerts}/certs/localhost.crt
                SSLCertificateKeyFile ${devkitCerts}/certs/localhost.key
+
+               # 3. Izinkan Apache mengakses root directory /home/syarif secara eksplisit
+               <Directory "/home/${user.name}">
+                   Options Indexes FollowSymLinks ExecCGI
+                   AllowOverride All
+                   Require all granted
+               </Directory>
 
                Alias /403.html /var/www/default/403.html
                Alias /500.html /var/www/default/500.html
@@ -212,28 +205,24 @@
                <VirtualHost *:443>
                    ServerName ${cfg.mailpitDomain}
 
-                  SSLEngine on
+                   SSLEngine on
                    SSLCertificateFile ${devkitCerts}/certs/mailpit.crt
                    SSLCertificateKeyFile ${devkitCerts}/certs/mailpit.key
 
-                  # Matikan ProxyPreserveHost agar Mailpit tidak kebingungan menerima Host: mailpit.test
                    ProxyPreserveHost Off
 
-                  # WebSocket Support untuk Real-time Updates (Mailpit UI)
                    RewriteEngine On
                    RewriteCond %{HTTP:Upgrade} =websocket [NC]
                    RewriteRule /(.*)           ws://127.0.0.1:8025/$1 [P,L]
 
-                  # HTTP Proxy Mapping
                    ProxyPass / http://127.0.0.1:8025/ retry=0 timeout=5
                    ProxyPassReverse / http://127.0.0.1:8025/
 
-                  # Mencegah error SSL handshake/proxy pada lingkungan lokal
                    SSLProxyEngine Off
 
-                  <Location />
+                   <Location />
                        Require all granted
-                  </Location>
+                   </Location>
                 </VirtualHost>
 
                <Directory "/var/www">
@@ -242,13 +231,7 @@
                    Require all granted
                </Directory>
 
-               <Directory "/var/www/default">
-                   Options Indexes FollowSymLinks
-                   AllowOverride None
-                   Require all granted
-               </Directory>
-
-              IncludeOptional /var/lib/apache-vhosts/*.conf
+               IncludeOptional /var/lib/apache-vhosts/*.conf
             '';
           };
 
@@ -275,6 +258,7 @@
           "mysql"
           "wwwrun"
         ];
+
         security.sudo.extraRules = [
           {
             users = [ user.name ];
@@ -302,20 +286,19 @@
           8025
         ];
 
+        # 4. Berikan kepemilikan direktori kerja Apache/Vhost ke user kamu
         systemd.tmpfiles.rules = [
-          "d /run/httpd 0755 wwwrun wwwrun -"
+          "d /run/httpd 0755 ${user.name} users -"
 
-          # Direktori SSL nyata yang bisa ditulis oleh syarif & wwwrun
-          "d ${certDir} 0775 ${user.name} wwwrun -"
-          "d ${certDir}/ca 0775 ${user.name} wwwrun -"
+          "d ${certDir} 0775 ${user.name} users -"
+          "d ${certDir}/ca 0775 ${user.name} users -"
           "L+ ${certDir}/ca/rootCA.pem - - - - ${devkitCerts}/ca/rootCA.pem"
           "L+ ${certDir}/ca/rootCA-key.pem - - - - ${devkitCerts}/ca/rootCA-key.pem"
 
-          "d /var/lib/apache-vhosts 0775 wwwrun wwwrun -"
-          "d /var/www 0775 wwwrun wwwrun -"
-          "d /var/www/default 0755 wwwrun wwwrun -"
+          "d /var/lib/apache-vhosts 0775 ${user.name} users -"
+          "d /var/www 0775 ${user.name} users -"
+          "d /var/www/default 0755 ${user.name} users -"
 
-          # Deploy all fallback web layouts natively using symlinks
           "L+ /var/www/default/index.html - - - - ${pkgs.writeText "404.html" (builtins.readFile ./templates/404.html)}"
           "L+ /var/www/default/403.html - - - - ${pkgs.writeText "403.html" (builtins.readFile ./templates/403.html)}"
           "L+ /var/www/default/500.html - - - - ${pkgs.writeText "500.html" (builtins.readFile ./templates/500.html)}"
@@ -325,5 +308,4 @@
       };
 
     };
-
 }

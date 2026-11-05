@@ -33,30 +33,22 @@ else
 fi
 
 # ====================================================================
-# GENERATE SSL CERTIFICATE AS REGULAR USER
+# GENERATE SSL CERTIFICATE (VALET STYLE: Fully owned by User)
 # ====================================================================
 export CAROOT="$CA_DIR"
 
 echo "🔑 Generating dedicated SSL certificate for ${DOMAIN}..."
 mkcert -cert-file "$DOMAIN_CRT" -key-file "$DOMAIN_KEY" "$DOMAIN" "*.$DOMAIN"
 
-# Pastikan file sertifikat dan key dapat dibaca oleh Apache (wwwrun)
+# Memastikan hak akses file sertifikat aman dan dapat dibaca oleh user
 chmod 644 "$DOMAIN_CRT"
-chmod 640 "$DOMAIN_KEY"
-sudo chown :wwwrun "$DOMAIN_CRT" "$DOMAIN_KEY" 2>/dev/null || true
+chmod 600 "$DOMAIN_KEY"
 # ====================================================================
-
-echo "🔒 Configuring parent directory traversal routes..."
-CURRENT_DIR="$PWD"
-while [ "$CURRENT_DIR" != "/" ]; do
-    sudo chmod o+x "$CURRENT_DIR"
-    CURRENT_DIR=$(dirname "$CURRENT_DIR")
-done
-chmod -R g+rX "$PWD"
 
 echo "🔗 Binding ${DOMAIN} (HTTPS) to ${DOC_ROOT} using PHP ${PHP_VERSION}..."
 
-cat <<EOF > "$CONF_FILE"
+# Menggunakan tee agar bisa menulis vhost conf tanpa permission denied jika folder dimiliki root/users
+cat <<EOF | sudo tee "$CONF_FILE" > /dev/null
 # HTTP -> HTTPS Redirect VHost
 <VirtualHost *:80>
     ServerName ${DOMAIN}
@@ -94,7 +86,7 @@ if sudo systemctl reload httpd; then
     echo "🚀 Success! Your site is live at https://${DOMAIN}"
 else
     echo "❌ Apache reload failed! Cleaning invalid VirtualHost..."
-    rm -f "$CONF_FILE" "$DOMAIN_CRT" "$DOMAIN_KEY"
+    sudo rm -f "$CONF_FILE" "$DOMAIN_CRT" "$DOMAIN_KEY"
     sudo systemctl reload httpd || true
     exit 1
 fi

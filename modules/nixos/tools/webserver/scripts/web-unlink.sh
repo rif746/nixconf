@@ -38,7 +38,7 @@ if [[ "$1" == "--all" ]]; then
         domain=$(grep -i "ServerName" "$conf" | head -n1 | awk '{print $2}' | tr -d '"\r\n')
 
         echo "   -> Removing: ${domain}"
-        rm -f "$conf"
+        sudo rm -f "$conf"
         remove_ssl_certs "$project_name"
     done
 
@@ -53,12 +53,10 @@ fi
 # ====================================================================
 # INTERACTIVE FEATURE: SELECT PROJECT FROM REGISTERED LIST
 # ====================================================================
-# Convert current working directory name to lowercase for matching
 RAW_PROJECT_NAME=$(basename "$PWD")
 PROJECT_NAME=$(echo "$RAW_PROJECT_NAME" | tr '[:upper:]' '[:lower:]')
 CONF_FILE="$VHOST_DIR/${PROJECT_NAME}.conf"
 
-# If invoked without arguments AND current directory has no active linked config file
 if [[ $# -eq 0 ]] && [ ! -f "$CONF_FILE" ]; then
     echo "========================================================="
     echo "🌐 ACTIVE VIRTUAL HOST LINKS (*.test)"
@@ -70,7 +68,6 @@ if [[ $# -eq 0 ]] && [ ! -f "$CONF_FILE" ]; then
         exit 0
     fi
 
-    # Collect available .conf files into an array
     confs=("$VHOST_DIR"/*.conf)
 
     echo "Select a virtual host to unlink:"
@@ -108,7 +105,6 @@ if [[ $# -eq 0 ]] && [ ! -f "$CONF_FILE" ]; then
         exit 1
     fi
 else
-    # Use current working directory project name
     DOMAIN="${PROJECT_NAME}.test"
 fi
 
