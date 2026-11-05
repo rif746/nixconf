@@ -31,6 +31,7 @@
         useGlobalPkgs = true;
         useUserPackages = true;
         backupFileExtension = "bak";
+        overwriteBackup = true;
         extraSpecialArgs = { inherit inputs self user; };
 
         sharedModules = (builtins.attrValues (self.homeModules or { })) ++ [

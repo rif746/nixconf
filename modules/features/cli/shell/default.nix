@@ -20,20 +20,22 @@
       enable = true;
       settings = {
         "$schema" = "https://starship.rs/config-schema.json";
-        format = "[$hostname$directory$sudo$cmd_duration]()($git_branch $git_commit$git_state$git_metrics$git_status)( [via ](dimmed white)$nodejs$php$bun$golang$python)()$line_break[   ](bold green)";
+        # Remapped format strings to inherit standard Base16 terminal color slots
+        format = "[$hostname$directory$sudo$cmd_duration]()($git_branch $git_commit$git_state$git_metrics$git_status)( [via ](bright-black)$nodejs$php$bun$golang$python)()$line_break[   ](green)";
         right_format = "";
 
         git_metrics = {
           disabled = false;
-          added_style = "bold green";
-          deleted_style = "bold red";
+          added_style = "green";
+          deleted_style = "red";
           only_nonzero_diffs = true;
           format = "([+$added]($added_style) [-$deleted]($deleted_style) )";
         };
 
         bun = {
-          format = "[ | ](dimmed white)[$symbol($version )]($style)";
+          format = "[ | ](bright-black)[$symbol($version )]($style)";
           symbol = " ";
+          style = "yellow";
         };
 
         character = {
@@ -43,7 +45,7 @@
         };
 
         cmd_duration = {
-          style = "dimmed yellow";
+          style = "yellow";
         };
 
         directory = {
@@ -52,7 +54,7 @@
 
         git_branch = {
           format = "[$branch]($style)";
-          style = "dimmed bright-white";
+          style = "bright-white";
         };
 
         git_commit = {
@@ -61,7 +63,7 @@
 
         git_state = {
           format = "([\\($state( $progress_current/$progress_total)\\)]($style) )";
-          style = "bold yellow";
+          style = "yellow";
           rebase = "REBASING";
           merge = "MERGING";
           revert = "REVERTING";
@@ -72,7 +74,7 @@
         };
 
         git_status = {
-          format = "[[(*$conflicted$untracked$modified$staged$renamed$deleted)](218) ($ahead_behind$stashed)]($style)";
+          format = "[[(*$conflicted$untracked$modified$staged$renamed$deleted)](bright-magenta) ($ahead_behind$stashed)]($style)";
           style = "cyan";
           conflicted = " ";
           untracked = " ";
@@ -84,26 +86,26 @@
         };
 
         golang = {
-          format = "[ | ](dimmed white)[$symbol($version)]($style)";
+          format = "[ | ](bright-black)[$symbol($version)]($style)";
           symbol = " ";
-          style = "bold blue";
+          style = "blue";
         };
 
         hostname = {
           ssh_only = false;
           ssh_symbol = "󰛳 ";
-          style = "bold green";
+          style = "green";
         };
 
         java = {
-          format = "[ | ](dimmed white)[$symbol($version)]($style)";
+          format = "[ | ](bright-black)[$symbol($version)]($style)";
           symbol = "󰬷 ";
-          style = "bold bright-blue";
+          style = "blue";
         };
 
         nodejs = {
           format = "[$symbol($version)]($style)";
-          style = "bold bright-blue";
+          style = "blue";
         };
 
         os = {
@@ -118,25 +120,26 @@
         };
 
         php = {
-          format = "[ | ](dimmed white)[$symbol($version)]($style)";
+          format = "[ | ](bright-black)[$symbol($version)]($style)";
           symbol = " ";
-          style = "bold blue";
+          style = "purple";
         };
 
         python = {
-          style = "bold blue";
-          format = "[ | ](dimmed white)[$symbol$pyenv_prefix($version)(\\($virtualenv\\))]($style)";
+          style = "blue";
+          format = "[ | ](bright-black)[$symbol$pyenv_prefix($version)(\\($virtualenv\\))]($style)";
         };
 
         nix_shell = {
-          format = "[ | ](dimmed white)[$symbol$state(\\($name\\))]($style)";
+          format = "[ | ](bright-black)[$symbol$state(\\($name\\))]($style)";
           symbol = "❄️  ";
+          style = "cyan";
         };
 
         sudo = {
           disabled = false;
           symbol = "[# ]($style)";
-          style = "bold red";
+          style = "red";
         };
       };
     };

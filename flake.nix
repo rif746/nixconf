@@ -8,6 +8,7 @@
     wrapper-modules.url = "github:BirdeeHub/nix-wrapper-modules";
     home-manager.url = "github:nix-community/home-manager";
     llm-agents.url = "github:numtide/llm-agents.nix";
+    stylix.url = "github:nix-community/stylix";
 
     plasma-manager = {
       url = "github:nix-community/plasma-manager";

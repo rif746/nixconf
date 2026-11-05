@@ -10,12 +10,21 @@ let
 in
 {
   config = lib.mkIf (cfg.enable && cfg.firefox.enable) {
+    stylix.targets.firefox = {
+      profileNames = [ "default" ];
+      colorTheme.enable = true;
+    };
+
     programs.firefox = {
       enable = true;
       languagePacks = [
         "id"
         "en-US"
       ];
+
+      profiles.default = {
+        extensions.force = true;
+      };
 
       nativeMessagingHosts = [
         pkgs.kdePackages.plasma-browser-integration
@@ -46,6 +55,10 @@ in
           };
           "browsec@browsec.com" = {
             install_url = "https://addons.mozilla.org/firefox/downloads/file/4888986/latest.xpi";
+            installation_mode = "force_installed";
+          };
+          "FirefoxColor@mozilla.com" = {
+            install_url = "https://addons.mozilla.org/firefox/downloads/file/3643624/latest.xpi";
             installation_mode = "force_installed";
           };
         };

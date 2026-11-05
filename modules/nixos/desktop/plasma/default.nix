@@ -121,7 +121,6 @@
 
           workspace = {
             clickItemTo = "select";
-            lookAndFeel = "org.kde.breezedark.desktop";
           };
 
           panels = [

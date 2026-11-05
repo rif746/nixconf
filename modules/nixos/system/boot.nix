@@ -9,7 +9,7 @@
           enable = true;
           efiSupport = true;
           device = "nodev";
-          theme = "${pkgs.kdePackages.breeze-grub}/grub/themes/breeze";
+#           theme = "${pkgs.kdePackages.breeze-grub}/grub/themes/breeze";
         };
       };
 
@@ -35,10 +35,10 @@
 
       plymouth = {
         enable = true;
-        theme = "breeze";
-        themePackages = with pkgs; [
-          kdePackages.breeze-plymouth
-        ];
+#         theme = "breeze";
+#         themePackages = with pkgs; [
+#           kdePackages.breeze-plymouth
+#         ];
       };
     };
   };
