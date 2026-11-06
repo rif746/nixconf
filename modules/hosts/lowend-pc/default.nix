@@ -41,34 +41,11 @@
       { imports = builtins.attrValues self.nixosModules; }
 
       ({ ... }: {
-
-        zramSwap = {
-          enable = true;
-          memoryPercent = 50;
-        };
-
-        nix = {
-          settings = {
-            auto-optimise-store = true;
-            cores = 2;
-            max-jobs = 2;
-          };
-        };
-
-        documentation.enable = false;
-        documentation.doc.enable = false;
-        documentation.man.enable = false;
-
-        boot.kernel.sysctl = {
-          "vm.swappiness" = 180;
-          "vm.watermark_boost_factor" = 0;
-          "vm.watermark_scale_factor" = 125;
-        };
-
         networking.hostName = "lowend-pc";
         system.stateVersion = "26.05";
 
         nixos = {
+          lowspec.enable = true;
           desktop.plasma.enable = true;
           tools = {
             webserver.enable = true;

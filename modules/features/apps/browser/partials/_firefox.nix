@@ -1,4 +1,5 @@
 {
+  osConfig,
   config,
   lib,
   pkgs,
@@ -7,6 +8,7 @@
 
 let
   cfg = config.features.apps.browser;
+  isLowspec= osConfig.nixos.lowspec.enable;
 in
 {
   config = lib.mkIf (cfg.enable && cfg.firefox.enable) {
@@ -63,124 +65,141 @@ in
           };
         };
 
-        Preferences = {
-          "browser.contentblocking.category" = {
-            Value = "strict";
-            Status = "locked";
-          };
-          "extensions.pocket.enabled" = {
-            Value = false;
-            Status = "locked";
-          };
-          "browser.newtabpage.activity-stream.showSponsoredTopSites" = {
-            Value = false;
-            Status = "locked";
-          };
-          "security.enterprise_roots.enabled" = true;
+        Preferences = lib.mkMerge [
+          (lib.mkIf isLowspec {
+            "dom.ipc.processCount" = 2;
 
-          # AI Features Disabled
-          "browser.ai.control.default" = {
-            Value = "blocked";
-            Status = "locked";
-          };
-          "browser.ai.control.linkPreviewKeyPoints" = {
-            Value = "blocked";
-            Status = "locked";
-          };
-          "browser.ai.control.pdfjsAltText" = {
-            Value = "blocked";
-            Status = "locked";
-          };
-          "browser.ai.control.sidebarChatbot" = {
-            Value = "blocked";
-            Status = "locked";
-          };
-          "browser.ai.control.smartTabGroups" = {
-            Value = "blocked";
-            Status = "locked";
-          };
-          "browser.ai.control.smartWindow" = {
-            Value = "blocked";
-            Status = "locked";
-          };
-          "browser.ai.control.translations" = {
-            Value = "blocked";
-            Status = "locked";
-          };
-          "browser.toolbars.bookmarks.visibility" = {
-            Value = "never";
-            Status = "locked";
-          };
+            "toolkit.cosmeticAnimations.enabled" = false;
+            "browser.download.animateNotifications" = false;
 
-          # Sidebar & Vertical Tabs
-          "sidebar.revamp" = {
-            Value = true;
-            Status = "locked";
-          };
-          "sidebar.verticalTabs" = {
-            Value = true;
-            Status = "locked";
-          };
-          "sidebar.visibility" = {
-            Value = "always-show";
-            Status = "locked";
-          };
-          "sidebar.main.tools" = {
-            Value = "history,bookmarks,passwords";
-            Status = "locked";
-          };
+            "browser.tabs.unloadOnLowMemory" = true;
 
-          # Custom Toolbar Placement Layout
-          "browser.uiCustomization.state" = {
-            Value = builtins.toJSON {
-              placements = {
-                widget-overflow-fixed-list = [ ];
-                unified-extensions-area = [
+            "general.smoothScroll" = false;
+
+            "datareporting.healthreport.uploadEnabled" = false;
+            "toolkit.telemetry.unified" = false;
+            "experiments.supported" = false;
+          })
+          {
+            "security.enterprise_roots.enabled" = true;
+
+            "browser.contentblocking.category" = {
+              Value = "strict";
+              Status = "locked";
+            };
+            "extensions.pocket.enabled" = {
+              Value = false;
+              Status = "locked";
+            };
+            "browser.newtabpage.activity-stream.showSponsoredTopSites" = {
+              Value = false;
+              Status = "locked";
+            };
+
+            # AI Features Disabled
+            "browser.ai.control.default" = {
+              Value = "blocked";
+              Status = "locked";
+            };
+            "browser.ai.control.linkPreviewKeyPoints" = {
+              Value = "blocked";
+              Status = "locked";
+            };
+            "browser.ai.control.pdfjsAltText" = {
+              Value = "blocked";
+              Status = "locked";
+            };
+            "browser.ai.control.sidebarChatbot" = {
+              Value = "blocked";
+              Status = "locked";
+            };
+            "browser.ai.control.smartTabGroups" = {
+              Value = "blocked";
+              Status = "locked";
+            };
+            "browser.ai.control.smartWindow" = {
+              Value = "blocked";
+              Status = "locked";
+            };
+            "browser.ai.control.translations" = {
+              Value = "blocked";
+              Status = "locked";
+            };
+            "browser.toolbars.bookmarks.visibility" = {
+              Value = "never";
+              Status = "locked";
+            };
+
+            # Sidebar & Vertical Tabs
+            "sidebar.revamp" = {
+              Value = true;
+              Status = "locked";
+            };
+            "sidebar.verticalTabs" = {
+              Value = true;
+              Status = "locked";
+            };
+            "sidebar.visibility" = {
+              Value = "always-show";
+              Status = "locked";
+            };
+            "sidebar.main.tools" = {
+              Value = "history,bookmarks,passwords";
+              Status = "locked";
+            };
+
+            # Custom Toolbar Placement Layout
+            "browser.uiCustomization.state" = {
+              Value = builtins.toJSON {
+                placements = {
+                  widget-overflow-fixed-list = [ ];
+                  unified-extensions-area = [
+                    "helper_savefrom_net-browser-action"
+                    "plasma-browser-integration_kde_org-browser-action"
+                    "browsec_browsec_com-browser-action"
+                  ];
+                  nav-bar = [
+                    "sidebar-button"
+                    "back-button"
+                    "forward-button"
+                    "stop-reload-button"
+                    "urlbar-container"
+                    "unified-extensions-button"
+                    "downloads-button"
+                    "ublock0_raymondhill_net-browser-action"
+                    "panel-menu-button"
+                  ];
+                  toolbar-menubar = [ "menubar-items" ];
+                  TabsToolbar = [ ];
+                  vertical-tabs = [ "tabbrowser-tabs" ];
+                  PersonalToolbar = [
+                    "import-button"
+                    "personal-bookmarks"
+                  ];
+                };
+                seen = [
+                  "developer-button"
                   "helper_savefrom_net-browser-action"
                   "plasma-browser-integration_kde_org-browser-action"
                   "browsec_browsec_com-browser-action"
-                ];
-                nav-bar = [
-                  "sidebar-button"
-                  "back-button"
-                  "forward-button"
-                  "stop-reload-button"
-                  "urlbar-container"
-                  "unified-extensions-button"
-                  "downloads-button"
                   "ublock0_raymondhill_net-browser-action"
-                  "panel-menu-button"
+                  "downloads-button"
                 ];
-                toolbar-menubar = [ "menubar-items" ];
-                TabsToolbar = [ ];
-                vertical-tabs = [ "tabbrowser-tabs" ];
-                PersonalToolbar = [
-                  "import-button"
-                  "personal-bookmarks"
+                dirtyAreaCache = [
+                  "nav-bar"
+                  "TabsToolbar"
+                  "vertical-tabs"
+                  "PersonalToolbar"
+                  "unified-extensions-area"
+                  "toolbar-menubar"
                 ];
+                currentVersion = 28;
+                newElementCount = 0;
               };
-              seen = [
-                "developer-button"
-                "helper_savefrom_net-browser-action"
-                "plasma-browser-integration_kde_org-browser-action"
-                "browsec_browsec_com-browser-action"
-                "ublock0_raymondhill_net-browser-action"
-                "downloads-button"
-              ];
-              dirtyAreaCache = [
-                "nav-bar"
-                "TabsToolbar"
-                "vertical-tabs"
-                "PersonalToolbar"
-                "unified-extensions-area"
-                "toolbar-menubar"
-              ];
-              currentVersion = 28;
-              newElementCount = 0;
+              Status = "user";
             };
-            Status = "user";
-          };
-        };
+          }
+        ];
       };
     };
   };
