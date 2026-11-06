@@ -8,7 +8,7 @@
 
 let
   cfg = config.features.apps.browser;
-  isLowspec= osConfig.nixos.lowspec.enable;
+  isLowspec = osConfig.nixos.lowspec.enable;
 in
 {
   config = lib.mkIf (cfg.enable && cfg.brave.enable) {
@@ -29,16 +29,17 @@ in
         "--disable-metrics"
         "--no-first-run"
         "--no-default-browser-check"
-      ] ++  (lib.optionals isLowspec [
-          "--disable-background-networking"
-          "--disable-background-timer-throttling"
-          "--disable-backgrounding-occluded-windows"
-          "--enable-features=AutomaticTabDiscarding,DiscardRingImprovements"
-          "--disable-gpu-vsync"
-          "--disable-smooth-scrolling"
-          "--disable-breakpad"
-          "--disable-component-update"
-        ]);
+      ]
+      ++ (lib.optionals isLowspec [
+        "--disable-background-networking"
+        "--disable-background-timer-throttling"
+        "--disable-backgrounding-occluded-windows"
+        "--enable-features=AutomaticTabDiscarding,DiscardRingImprovements"
+        "--disable-gpu-vsync"
+        "--disable-smooth-scrolling"
+        "--disable-breakpad"
+        "--disable-component-update"
+      ]);
     };
   };
 }

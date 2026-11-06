@@ -21,6 +21,7 @@
       imports = [
         ./partials/_firefox.nix
         ./partials/_brave.nix
+        ./partials/_qutebrowser.nix
       ];
 
       options.features.apps.browser = {
@@ -30,6 +31,7 @@
           type = lib.types.enum [
             "firefox"
             "brave"
+            "qutebrowser"
           ];
           default = "firefox";
           description = "Default web browser for XDG MIME associations";
@@ -45,6 +47,12 @@
           type = lib.types.bool;
           default = false;
           description = "Enable Brave browser";
+        };
+
+        qutebrowser.enable = lib.mkOption {
+          type = lib.types.bool;
+          default = false;
+          description = "Enable Qutebrowser";
         };
       };
 

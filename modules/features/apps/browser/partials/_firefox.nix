@@ -8,7 +8,7 @@
 
 let
   cfg = config.features.apps.browser;
-  isLowspec= osConfig.nixos.lowspec.enable;
+  isLowspec = osConfig.nixos.lowspec.enable;
 in
 {
   config = lib.mkIf (cfg.enable && cfg.firefox.enable) {
