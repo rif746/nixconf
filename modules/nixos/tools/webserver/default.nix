@@ -10,10 +10,9 @@
     let
       cfg = config.nixos.tools.webserver;
 
-      # 1. VALET STYLE: Jalankan PHP-FPM Worker & Socket langsung sebagai User & Group utama
       mkPhpPool = version: {
         user = user.name;
-        group = "users"; # Atau user.name jika group utama sama dengan username
+        group = "users";
         settings = {
           "pm" = "dynamic";
           "pm.max_children" = 5;
@@ -21,7 +20,6 @@
           "pm.min_spare_servers" = 1;
           "pm.max_spare_servers" = 3;
 
-          # Socket dimiliki oleh user kamu
           "listen.owner" = user.name;
           "listen.group" = "users";
           "listen.mode" = "0660";
@@ -135,7 +133,6 @@
             adminAddr = "admin@localhost";
             enablePHP = true;
 
-            # 2. VALET STYLE: Jalankan Master & Worker Apache sebagai User Kamu!
             user = user.name;
             group = "users";
 
@@ -153,85 +150,85 @@
             ];
 
             extraConfig = ''
-               Listen 443 https
-               DefaultRuntimeDir "/run/httpd"
-               SSLCertificateFile ${devkitCerts}/certs/localhost.crt
-               SSLCertificateKeyFile ${devkitCerts}/certs/localhost.key
+              Listen 443 https
+              DefaultRuntimeDir "/run/httpd"
+              SSLCertificateFile ${devkitCerts}/certs/localhost.crt
+              SSLCertificateKeyFile ${devkitCerts}/certs/localhost.key
 
-               # 3. Izinkan Apache mengakses root directory /home/syarif secara eksplisit
-               <Directory "/home/${user.name}">
-                   Options Indexes FollowSymLinks ExecCGI
-                   AllowOverride All
-                   Require all granted
-               </Directory>
+              # 3. Izinkan Apache mengakses root directory /home/syarif secara eksplisit
+              <Directory "/home/${user.name}">
+                  Options Indexes FollowSymLinks ExecCGI
+                  AllowOverride All
+                  Require all granted
+              </Directory>
 
-               Alias /403.html /var/www/default/403.html
-               Alias /500.html /var/www/default/500.html
-               Alias /503.html /var/www/default/503.html
+              Alias /403.html /var/www/default/403.html
+              Alias /500.html /var/www/default/500.html
+              Alias /503.html /var/www/default/503.html
 
-               ErrorDocument 403 /403.html
-               ErrorDocument 500 /500.html
-               ErrorDocument 503 /503.html
+              ErrorDocument 403 /403.html
+              ErrorDocument 500 /500.html
+              ErrorDocument 503 /503.html
 
-               # Default Fallback VHost (HTTP - Port 80)
-               <VirtualHost *:80>
-                   ServerName default.test
-                   ServerAlias *.test localhost 127.0.0.1
-                   DocumentRoot "/var/www/default"
+              # Default Fallback VHost (HTTP - Port 80)
+              <VirtualHost *:80>
+                  ServerName default.test
+                  ServerAlias *.test localhost 127.0.0.1
+                  DocumentRoot "/var/www/default"
 
-                   <Directory "/var/www/default">
-                       AllowOverride None
-                       Require all granted
-                   </Directory>
+                  <Directory "/var/www/default">
+                      AllowOverride None
+                      Require all granted
+                  </Directory>
+              </VirtualHost>
+
+              # Default Fallback VHost (HTTPS - Port 443)
+              <VirtualHost *:443>
+                  ServerName default.test
+
+                  SSLEngine on
+                  SSLCertificateFile ${devkitCerts}/certs/localhost.crt
+                  SSLCertificateKeyFile ${devkitCerts}/certs/localhost.key
+
+                  DocumentRoot "/var/www/default"
+
+                  <Directory "/var/www/default">
+                      AllowOverride None
+                      Require all granted
+                  </Directory>
+              </VirtualHost>
+
+              # Mailpit SSL Reverse Proxy
+              <VirtualHost *:443>
+                  ServerName ${cfg.mailpitDomain}
+
+                  SSLEngine on
+                  SSLCertificateFile ${devkitCerts}/certs/mailpit.crt
+                  SSLCertificateKeyFile ${devkitCerts}/certs/mailpit.key
+
+                  ProxyPreserveHost Off
+
+                  RewriteEngine On
+                  RewriteCond %{HTTP:Upgrade} =websocket [NC]
+                  RewriteRule /(.*)           ws://127.0.0.1:8025/$1 [P,L]
+
+                  ProxyPass / http://127.0.0.1:8025/ retry=0 timeout=5
+                  ProxyPassReverse / http://127.0.0.1:8025/
+
+                  SSLProxyEngine Off
+
+                  <Location />
+                      Require all granted
+                  </Location>
                </VirtualHost>
 
-               # Default Fallback VHost (HTTPS - Port 443)
-               <VirtualHost *:443>
-                   ServerName default.test
+              <Directory "/var/www">
+                  Options Indexes FollowSymLinks
+                  AllowOverride None
+                  Require all granted
+              </Directory>
 
-                   SSLEngine on
-                   SSLCertificateFile ${devkitCerts}/certs/localhost.crt
-                   SSLCertificateKeyFile ${devkitCerts}/certs/localhost.key
-
-                   DocumentRoot "/var/www/default"
-
-                   <Directory "/var/www/default">
-                       AllowOverride None
-                       Require all granted
-                   </Directory>
-               </VirtualHost>
-
-               # Mailpit SSL Reverse Proxy
-               <VirtualHost *:443>
-                   ServerName ${cfg.mailpitDomain}
-
-                   SSLEngine on
-                   SSLCertificateFile ${devkitCerts}/certs/mailpit.crt
-                   SSLCertificateKeyFile ${devkitCerts}/certs/mailpit.key
-
-                   ProxyPreserveHost Off
-
-                   RewriteEngine On
-                   RewriteCond %{HTTP:Upgrade} =websocket [NC]
-                   RewriteRule /(.*)           ws://127.0.0.1:8025/$1 [P,L]
-
-                   ProxyPass / http://127.0.0.1:8025/ retry=0 timeout=5
-                   ProxyPassReverse / http://127.0.0.1:8025/
-
-                   SSLProxyEngine Off
-
-                   <Location />
-                       Require all granted
-                   </Location>
-                </VirtualHost>
-
-               <Directory "/var/www">
-                   Options Indexes FollowSymLinks
-                   AllowOverride None
-                   Require all granted
-               </Directory>
-
-               IncludeOptional /var/lib/apache-vhosts/*.conf
+              IncludeOptional /var/lib/apache-vhosts/*.conf
             '';
           };
 
@@ -286,7 +283,6 @@
           8025
         ];
 
-        # 4. Berikan kepemilikan direktori kerja Apache/Vhost ke user kamu
         systemd.tmpfiles.rules = [
           "d /run/httpd 0755 ${user.name} users -"
 
