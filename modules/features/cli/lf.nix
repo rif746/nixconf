@@ -8,7 +8,7 @@
     }:
 
     let
-      # Previewer Script untuk lf
+      # Previewer script for lf
       lf-preview = pkgs.writeShellScript "lf-preview" ''
         file="$1"
         width="$2"
@@ -21,7 +21,7 @@
             ${pkgs.bat}/bin/bat --color=always --style=plain "$file" || ${pkgs.coreutils}/bin/cat "$file"
             ;;
           image/*)
-            # Integrasi preview gambar (cth: chafa / pistol)
+            # Image preview integration (e.g., chafa / pistol)
             ${pkgs.chafa}/bin/chafa --size="$\{width}x$\{height}" "$file"
             ;;
           application/pdf)
@@ -33,14 +33,13 @@
         esac
       '';
 
-      # Cleaner Script untuk lf
+      # Cleaner script for lf
       lf-cleaner = pkgs.writeShellScript "lf-cleaner" ''
-        # Tempatkan perintah pembersihan preview (misal hapus cache gambar) jika diperlukan
         exit 0
       '';
     in
     {
-      # Pastikan paket pendukung yang digunakan dalam skrip cmd tersedia
+      # Ensure the supporting packages used by the cmd script are available
       home.packages = with pkgs; [
         file
         feh
@@ -57,7 +56,7 @@
       programs.lf = {
         enable = true;
 
-        # Opsi dasar lf
+        # Basic lf options
         settings = {
           drawbox = true;
           icons = true;

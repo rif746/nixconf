@@ -1,5 +1,5 @@
 { inputs, self, ... }: {
-  # Terdaftar otomatis ke self.nixosModules.system-users via import-tree
+  # Automatically registered as self.nixosModules.system-users via import-tree
   flake.nixosModules.system-users =
     {
       user,
@@ -36,6 +36,8 @@
 
         sharedModules = (builtins.attrValues (self.homeModules or { })) ++ [
           inputs.plasma-manager.homeModules.plasma-manager
+          inputs.nixvim.homeModules.nixvim
+          inputs.rif-nixvim.nixvimModules.default
         ];
 
         users.${user.name} = {

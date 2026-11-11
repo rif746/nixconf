@@ -40,7 +40,7 @@
               defaultBranch = "master";
             };
             pull = {
-              rebase = true; # Merge on pull dengan rebase secara default
+              rebase = true; # Rebase by default when pulling
             };
             core = {
               editor = "vim";

@@ -1,120 +1,120 @@
 # ❄️ NixOS & Home Manager Configuration
 
-Repositori ini berisi konfigurasi sistem NixOS dan lingkungan pengguna Home Manager yang dibangun secara **declarative**, **modular**, dan berbasis **Flakes** (`flake-parts`).
+This repository contains the NixOS system and Home Manager user environment configuration, built declaratively, modularly, and on top of **Flakes** (`flake-parts`).
 
 ---
 
-## 🏗️ Arsitektur & Prinsip Desain
+## 🏗️ Architecture & Design Principles
 
 1. **Single Source of Truth (`specialArgs.user`)**  
-   Metadata pengguna (nama, deskripsi, hashed password, default shell, hingga profil fitur HM) didefinisikan secara eksplisit di level host (`modules/hosts/<hostname>/default.nix`) dan di-inject via `specialArgs`. Tidak ada lagi profil HM terpisah yang terisolasi.
+   User metadata (name, description, hashed password, default shell, and HM feature profile) is explicitly defined at the host level (`modules/hosts/<hostname>/default.nix`) and injected through `specialArgs`. There are no longer isolated, separate HM profiles.
 
-2. **Pemisahan Ruang Lingkup Sistem vs Pengguna**  
-   - `modules/nixos/`: Pengaturan level OS/sistem (hardware, display manager, bootloader, layanan sistem).
-   - `modules/features/` & `modules/home/`: Pengaturan level user-space (CLI tools, GUI apps, dotfiles, shell configs).
+2. **Separation of System and User Scope**
+   - `modules/nixos/`: OS/system-level settings (hardware, display manager, bootloader, system services).
+   - `modules/features/` & `modules/home/`: User-space settings (CLI tools, GUI apps, dotfiles, shell configs).
 
 3. **Inter-Module Communication (`osConfig`)**  
-   Modul Home Manager membaca status aktif layanan sistem NixOS secara aman melalui `osConfig.nixos.*` untuk menghindari *infinite recursion error*.
+   Home Manager modules safely read the active status of NixOS system services through `osConfig.nixos.*` to avoid *infinite recursion errors*.
 
 4. **Dynamic & Granular CLI Integration**  
-   - Terminal shell di-resolve secara dinamis via path `(./. + "/_${user.shell}.nix")`.
-   - Tool Developer dipecah secara granular (`vcs.nix`, `neovim/`, `direnv`, `devenv`).
-   - Prompt **Starship** dikonfigurasi penuh via atribut Nix (`programs.starship.settings`) dengan visual indikator VCS (Nerd Font glyphs), multi-runtime language, `devenv`, dan `nix-shell`.
+   - The terminal shell is resolved dynamically through the path `(./. + "/_${user.shell}.nix")`.
+   - Developer tools are split into granular modules (`vcs.nix`, `neovim/`, `direnv`, `devenv`).
+   - The **Starship** prompt is fully configured through Nix attributes (`programs.starship.settings`) with visual VCS indicators (Nerd Font glyphs), multiple language runtimes, `devenv`, and `nix-shell`.
 
 ---
 
-## 📂 Struktur Direktori
+## 📂 Directory Structure
 
 ```text
 .
 ├── flake.nix
 ├── modules/
-│   ├── features/                  # Modul fitur Home Manager (User-space)
-│   │   ├── apps/                  # Aplikasi GUI (browser, communications, godot, jetbrains)
-│   │   └── cli/                   # Perangkat CLI (vcs, neovim, llm, shell)
+│   ├── features/                  # Home Manager feature modules (user space)
+│   │   ├── apps/                  # GUI applications (browser, communications, godot, jetbrains)
+│   │   └── cli/                   # CLI tools (vcs, neovim, llm, shell)
 │   │       ├── shell/             # Main shell module & dynamic _<shell>.nix loader
 │   │       └── vcs.nix            # Version Control System (Git, LazyGit, GitHub CLI)
-│   ├── hosts/                     # Definisi Host / Mesin Spesifik
-│   │   └── pc-a520m/              # Konfigurasi Host AMD A520M & Hardware (_hardware.nix)
-│   └── nixos/                     # Modul NixOS System-space
+│   ├── hosts/                     # Host-specific definitions
+│   │   └── pc-a520m/              # AMD A520M host and hardware configuration (_hardware.nix)
+│   └── nixos/                     # NixOS system-space modules
 │       ├── desktop/               # Desktop Environment (Plasma 6, DWM)
 │       ├── system/                # Core OS (bootloader, audio, joystick, users)
-│       └── tools/                 # Layanan & Devkit Sistem (webserver, gaming, virt)
+│       └── tools/                 # System services and development tools (webserver, gaming, virtualization)
 ```
 
 ---
 
-## ⚙️ Opsi Namespace Utama
+## ⚙️ Main Namespace Options
 
 ### NixOS (`nixos.*`)
 
 | Opsi | Tipe | Deskripsi |
 | --- | --- | --- |
-| `nixos.desktop.plasma.enable` | `bool` | Mengaktifkan KDE Plasma 6 Desktop Environment |
-| `nixos.tools.gaming.enable` | `bool` | Mengaktifkan lingkungan gaming (Steam, GameMode) |
-| `nixos.tools.webserver.enable` | `bool` | Development stack lokal (Apache, PHP 8.3/8.5, MariaDB, Dnsmasq `*.test`) |
-| `nixos.tools.virtualisation.kvm.enable` | `bool` | Virtualisasi KVM / QEMU & Libvirtd |
-| `nixos.tools.virtualisation.docker.enable` | `bool` | Mesin Kontainer Docker |
+| `nixos.desktop.plasma.enable` | `bool` | Enable the KDE Plasma 6 desktop environment |
+| `nixos.tools.gaming.enable` | `bool` | Enable the gaming environment (Steam, GameMode) |
+| `nixos.tools.webserver.enable` | `bool` | Local development stack (Apache, PHP 8.3/8.5, MariaDB, Dnsmasq `*.test`) |
+| `nixos.tools.virtualisation.kvm.enable` | `bool` | KVM / QEMU and Libvirtd virtualization |
+| `nixos.tools.virtualisation.docker.enable` | `bool` | Docker container engine |
 
 ### Home Manager (`features.*`)
 
 | Opsi | Tipe | Deskripsi |
 | --- | --- | --- |
-| `features.apps.browser.enable` | `bool` | Browser suite dengan wrapping XDG default browser |
-| `features.apps.jetbrains.enable` | `bool` | IDE JetBrains (PhpStorm, DataGrip, PyCharm, dll.) |
+| `features.apps.browser.enable` | `bool` | Browser suite with XDG default browser wrapper |
+| `features.apps.jetbrains.enable` | `bool` | JetBrains IDEs (PhpStorm, DataGrip, PyCharm, etc.) |
 | `features.cli.vcs.enable` | `bool` | Modular VCS toolchain (Git, LazyGit, GH CLI) |
 | `features.cli.nvim.enable` | `bool` | Neovim text editor setup |
 | `features.cli.llm.enable` | `bool` | CLI LLM tools wrapper |
 
 ---
 
-## 🚀 Cara Penggunaan
+## 🚀 Usage
 
-### 1. Inisialisasi Hardware (Wajib Saat Baru Diclone / Mesin Baru)
+### 1. Hardware Initialization (Required for New Clones or Machines)
 
-Setiap mesin (Host/VM) memiliki UUID disk dan modul kernel spesifik. Saat repositori baru di-clone atau hendak menambahkan host baru, **selalu jalankan generasi konfigurasi hardware ke direktori target host**:
+Each machine (host/VM) has disk UUIDs and specific kernel modules. When cloning the repository or adding a new host, **always generate the hardware configuration in the target host directory**:
 
 ```bash
-# 1. Generate konfigurasi hardware langsung ke direktori host spesifik
+# 1. Generate the hardware configuration directly in the host-specific directory
 sudo nixos-generate-config --dir modules/hosts/<hostname>
 
-# 2. Masuk ke direktori host
+# 2. Change to the host directory
 cd modules/hosts/<hostname>
 
-# 3. Ubah nama hardware-configuration.nix menjadi _hardware.nix
+# 3. Rename hardware-configuration.nix to _hardware.nix
 mv hardware-configuration.nix _hardware.nix
 
-# 4. Hapus configuration.nix bawaan hasil generate (agar tidak merusak struktur Flake)
+# 4. Remove the generated configuration.nix (to avoid disrupting the Flake structure)
 rm configuration.nix
 ```
 
-> **Catatan:** Pastikan modul host (`modules/hosts/<hostname>/default.nix`) melakukan import terhadap `./_hardware.nix`.
+> **Note:** Ensure the host module (`modules/hosts/<hostname>/default.nix`) imports `./_hardware.nix`.
 
-### 2. Build & Switch Konfigurasi
+### 2. Build and Switch the Configuration
 
-Untuk menerapkan perubahan konfigurasi pada mesin (misal `pc-a520m`):
+To apply configuration changes to a machine (for example, `pc-a520m`):
 
 ```bash
-# Menggunakan alias bawaan modul shell:
+# Use the shell module's built-in alias:
 rebuild
 
-# Atau perintah NixOS native:
+# Or use the native NixOS command:
 sudo nixos-rebuild switch --flake .#pc-a520m
 ```
 
-### 3. Pembersihan Store (Garbage Collection)
+### 3. Store Cleanup (Garbage Collection)
 
 ```bash
-# Menggunakan alias bawaan:
+# Use the built-in alias:
 nix-clear
 
-# Atau perintah native:
+# Or use the native command:
 sudo nix-collect-garbage -d
 ```
 
-### 4. Menambahkan Host Baru
+### 4. Adding a New Host
 
-1. Buat folder baru di bawah `modules/hosts/<hostname>/`.
-2. Jalankan langkah **Inisialisasi Hardware** di atas untuk membuat `_hardware.nix`.
-3. Buat `default.nix` di folder host tersebut, lalu deklarasikan `specialArgs.user` beserta profil fiturnya.
-4. Daftarkan host baru tersebut ke dalam `flake.nix`.
+1. Create a new directory under `modules/hosts/<hostname>/`.
+2. Follow the **Hardware Initialization** steps above to create `_hardware.nix`.
+3. Create `default.nix` in that host directory, then declare `specialArgs.user` and its feature profile.
+4. Register the new host in `flake.nix`.

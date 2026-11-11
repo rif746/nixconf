@@ -1,5 +1,5 @@
 { ... }: {
-  # Terdaftar otomatis ke self.nixosModules.cli-llm via flake-parts & import-tree
+  # Automatically registered as self.homeModules.cli-llm via flake-parts and import-tree
   flake.homeModules.cli-llm =
     {
       config,

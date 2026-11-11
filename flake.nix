@@ -9,6 +9,8 @@
     home-manager.url = "github:nix-community/home-manager";
     llm-agents.url = "github:numtide/llm-agents.nix";
     stylix.url = "github:nix-community/stylix";
+    nixvim.url = "github:nix-community/nixvim";
+    rif-nixvim.url = "path:/home/syarif/Projects/nvim-nix/";
 
     plasma-manager = {
       url = "github:nix-community/plasma-manager";
@@ -20,7 +22,7 @@
     inputs:
     inputs.flake-parts.lib.mkFlake { inherit inputs; } {
       imports = [
-        # Mendaftarkan dukungan flake.homeModules ke flake-parts
+        # Register flake.homeModules support with flake-parts
         inputs.home-manager.flakeModules.home-manager
 
         # Auto-import folder modules

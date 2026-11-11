@@ -40,14 +40,14 @@ export CAROOT="$CA_DIR"
 echo "🔑 Generating dedicated SSL certificate for ${DOMAIN}..."
 mkcert -cert-file "$DOMAIN_CRT" -key-file "$DOMAIN_KEY" "$DOMAIN" "*.$DOMAIN"
 
-# Memastikan hak akses file sertifikat aman dan dapat dibaca oleh user
+# Ensure the certificate file permissions are secure and readable by the user
 chmod 644 "$DOMAIN_CRT"
 chmod 600 "$DOMAIN_KEY"
 # ====================================================================
 
 echo "🔗 Binding ${DOMAIN} (HTTPS) to ${DOC_ROOT} using PHP ${PHP_VERSION}..."
 
-# Menggunakan tee agar bisa menulis vhost conf tanpa permission denied jika folder dimiliki root/users
+# Use tee to write the vhost configuration without permission errors if the directory is owned by root or users
 cat <<EOF | sudo tee "$CONF_FILE" > /dev/null
 # HTTP -> HTTPS Redirect VHost
 <VirtualHost *:80>

@@ -1,5 +1,5 @@
 { ... }: {
-  # Otomatis terdaftar ke self.homeModules.apps-jetbrains via flake-parts & import-tree
+  # Automatically registered as self.homeModules.apps-jetbrains via flake-parts and import-tree
   flake.homeModules.apps-jetbrains =
     {
       config,
@@ -14,7 +14,7 @@
       options.features.apps.jetbrains = {
         enable = lib.mkEnableOption "JetBrains IDEs and Android Studio suite";
 
-        # Sub-toggle (Default false agar IDE berat tidak terinstall sekaligus kecuali diaktifkan)
+        # Sub-toggle (defaults to false so resource-intensive IDEs are not installed unless enabled)
         android-studio.enable = lib.mkOption {
           type = lib.types.bool;
           default = false;

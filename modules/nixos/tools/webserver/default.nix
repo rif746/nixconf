@@ -155,7 +155,7 @@
               SSLCertificateFile ${devkitCerts}/certs/localhost.crt
               SSLCertificateKeyFile ${devkitCerts}/certs/localhost.key
 
-              # 3. Izinkan Apache mengakses root directory /home/syarif secara eksplisit
+              # 3. Explicitly allow Apache to access the /home/syarif root directory
               <Directory "/home/${user.name}">
                   Options Indexes FollowSymLinks ExecCGI
                   AllowOverride All

@@ -7,13 +7,13 @@
       ...
     }:
     let
-      # Cek apakah modul gaming utama aktif
+      # Check whether the main gaming module is enabled
       gamingEnabled = osConfig.nixos.tools.gaming.enable or false;
 
-      # Cek opsi withExtraTools dari modul gaming.steam
+      # Check the withExtraTools option from the gaming.steam module
       extraToolsEnabled = osConfig.nixos.tools.gaming.steam.withExtraTools or false;
 
-      # Gabungkan kedua kondisi
+      # Combine both conditions
       enableLutris = gamingEnabled && extraToolsEnabled;
     in
     {
