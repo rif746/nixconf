@@ -10,7 +10,7 @@
     llm-agents.url = "github:numtide/llm-agents.nix";
     stylix.url = "github:nix-community/stylix";
     nixvim.url = "github:nix-community/nixvim";
-    rif-nixvim.url = "path:/home/syarif/Projects/nvim-nix/";
+    rif-nixvim.url = "gitlab:rif746/nixvim/";
 
     plasma-manager = {
       url = "github:nix-community/plasma-manager";

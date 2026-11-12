@@ -36,7 +36,6 @@
     };
     modules = [
       ./_hardware.nix
-      inputs.stylix.nixosModules.stylix
 
       { imports = builtins.attrValues self.nixosModules; }
 

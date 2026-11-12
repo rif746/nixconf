@@ -579,14 +579,17 @@
         "nixvim": "nixvim_2"
       },
       "locked": {
-        "lastModified": 1794366927,
-        "narHash": "sha256-ipxNpt5CZ+M1y3UPP62vFBQTGw/KW8g3rJXFVQtyuw4=",
-        "path": "/home/syarif/Projects/nvim-nix/",
-        "type": "path"
+        "lastModified": 1794471996,
+        "narHash": "sha256-XgiLdvPQXnGN55doAkTbe2bv5Te/F0ER0ijXs5IN58E=",
+        "owner": "rif746",
+        "repo": "nixvim",
+        "rev": "f89c23090a0f3196fd1cdb64267cd37e2aba1026",
+        "type": "gitlab"
       },
       "original": {
-        "path": "/home/syarif/Projects/nvim-nix/",
-        "type": "path"
+        "owner": "rif746",
+        "repo": "nixvim",
+        "type": "gitlab"
       }
     },
     "root": {

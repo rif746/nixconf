@@ -9,7 +9,8 @@
         pkgs.devenv
       ];
       shellAliases = {
-        rebuild = "sudo nixos-rebuild switch --flake .";
+        rebuild = "sudo nixos-rebuild switch --flake";
+        retest = "sudo nixos-rebuild test --flake";
         nix-clear = "sudo nix-collect-garbage -d";
         c = "clear";
         g = "git";

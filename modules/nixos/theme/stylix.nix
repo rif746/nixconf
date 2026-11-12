@@ -1,5 +1,9 @@
-{ ... }: {
+{ inputs, ... }: {
   flake.nixosModules.system-stylix = { pkgs, ... }: {
+    imports = [
+      inputs.stylix.nixosModules.stylix
+    ];
+
     stylix = {
       enable = true;
       image = ./wallpaper.png;
