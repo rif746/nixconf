@@ -11,6 +11,7 @@
     stylix.url = "github:nix-community/stylix";
     nixvim.url = "github:nix-community/nixvim";
     rif-nixvim.url = "gitlab:rif746/nixvim/";
+    twindesk.url = "github:InukaAsith/TwinDesk";
 
     plasma-manager = {
       url = "github:nix-community/plasma-manager";

@@ -9,13 +9,13 @@
           enable = true;
           efiSupport = true;
           device = "nodev";
-          #           theme = "${pkgs.kdePackages.breeze-grub}/grub/themes/breeze";
         };
       };
 
       kernelParams = [
         "quiet"
         "splash"
+        "ntsync"
 
         "fbcon=nodefer"
         "boot.shell_on_fail"

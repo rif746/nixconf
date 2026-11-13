@@ -470,6 +470,22 @@
     },
     "nixpkgs_8": {
       "locked": {
+        "lastModified": 1792502884,
+        "narHash": "sha256-IoNisKcGbUjdd45qCqywGMCYmZ5EnkxezvLII0FWwNA=",
+        "owner": "NixOS",
+        "repo": "nixpkgs",
+        "rev": "02c087f3fe673c9e317f206a627cb6b910336dbe",
+        "type": "github"
+      },
+      "original": {
+        "owner": "NixOS",
+        "ref": "nixos-unstable",
+        "repo": "nixpkgs",
+        "type": "github"
+      }
+    },
+    "nixpkgs_9": {
+      "locked": {
         "lastModified": 1793826729,
         "narHash": "sha256-D5H7H+qMoTGI/jJtxKP4u7BdjkFnUyhOovTrf3pTOr0=",
         "owner": "NixOS",
@@ -603,6 +619,7 @@
         "plasma-manager": "plasma-manager",
         "rif-nixvim": "rif-nixvim",
         "stylix": "stylix",
+        "twindesk": "twindesk",
         "wrapper-modules": "wrapper-modules"
       }
     },
@@ -787,9 +804,27 @@
         "type": "github"
       }
     },
-    "wrapper-modules": {
+    "twindesk": {
       "inputs": {
         "nixpkgs": "nixpkgs_8"
+      },
+      "locked": {
+        "lastModified": 1794554653,
+        "narHash": "sha256-idXtj0e9tmAauJKyifYK7T4geRsyIG5DJl6PPJ47bJQ=",
+        "owner": "InukaAsith",
+        "repo": "TwinDesk",
+        "rev": "acac9e7b4e7eaf7301fdf93762870bdc9ca966be",
+        "type": "github"
+      },
+      "original": {
+        "owner": "InukaAsith",
+        "repo": "TwinDesk",
+        "type": "github"
+      }
+    },
+    "wrapper-modules": {
+      "inputs": {
+        "nixpkgs": "nixpkgs_9"
       },
       "locked": {
         "lastModified": 1794397181,

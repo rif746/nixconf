@@ -54,9 +54,11 @@
               enable = true;
               steam = {
                 enable = true;
+                withExtraTools = true;
               };
             };
             webserver.enable = true;
+            twindesk.enable = true;
             virtualisation = {
               kvm.enable = true;
             };
