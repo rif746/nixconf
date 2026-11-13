@@ -50,6 +50,11 @@
         nixos = {
           desktop.plasma.enable = true;
           tools = {
+            webserver.enable = true;
+            twindesk.enable = true;
+            dev = {
+              adb.enable = true;
+            };
             gaming = {
               enable = true;
               steam = {
@@ -57,8 +62,6 @@
                 withExtraTools = true;
               };
             };
-            webserver.enable = true;
-            twindesk.enable = true;
             virtualisation = {
               kvm.enable = true;
             };

@@ -218,6 +218,20 @@ in
               Value = "history,bookmarks,passwords";
               Status = "locked";
             };
+
+            # Disable Built-in Translations
+            "browser.translations.enable" = {
+              Value = false;
+              Status = "locked";
+            };
+            "browser.translations.automaticallyPopup" = {
+              Value = false;
+              Status = "locked";
+            };
+            "browser.translations.select.enable" = {
+              Value = false;
+              Status = "locked";
+            };
           }
         ];
       };
