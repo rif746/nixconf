@@ -30,15 +30,10 @@
       kernelPackages = pkgs.linuxPackages_latest;
       tmp.cleanOnBoot = true;
       consoleLogLevel = 0;
-      initrd.verbose = false;
       initrd.kernelModules = [ "amdgpu" ];
 
       plymouth = {
         enable = true;
-        #         theme = "breeze";
-        #         themePackages = with pkgs; [
-        #           kdePackages.breeze-plymouth
-        #         ];
       };
     };
   };

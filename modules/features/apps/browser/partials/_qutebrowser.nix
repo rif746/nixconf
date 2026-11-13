@@ -1,13 +1,10 @@
 {
-  osConfig,
   config,
   lib,
-  pkgs,
   ...
 }:
 let
   cfg = config.features.apps.browser;
-  isLowspec = osConfig.nixos.lowspec.enable;
 in
 {
   programs.qutebrowser = lib.mkIf cfg.qutebrowser.enable {

@@ -26,6 +26,45 @@ in
 
       profiles.default = {
         extensions.force = true;
+
+        settings = {
+            "browser.uiCustomization.state" = builtins.toJSON {
+              placements = {
+                widget-overflow-fixed-list = [ ];
+                unified-extensions-area = [ ];
+                nav-bar = [
+                  "sidebar-button"
+                  "back-button"
+                  "forward-button"
+                  "stop-reload-button"
+                  "urlbar-container"
+                  "unified-extensions-button"
+                  "downloads-button"
+                  "ublock0_raymondhill_net-browser-action"
+                ];
+                toolbar-menubar = [ "menubar-items" ];
+                TabsToolbar = [ ];
+                vertical-tabs = [ "tabbrowser-tabs" ];
+                PersonalToolbar = [
+                  "import-button"
+                  "personal-bookmarks"
+                ];
+              };
+              seen = [
+                "developer-button"
+                "ublock0_raymondhill_net-browser-action"
+              ];
+              dirtyAreaCache = [
+                "nav-bar"
+                "TabsToolbar"
+                "PersonalToolbar"
+                "unified-extensions-area"
+                "toolbar-menubar"
+              ];
+              currentVersion = 28;
+              newElementCount = 0;
+          };
+        };
       };
 
       nativeMessagingHosts = [
@@ -42,43 +81,75 @@ in
           "uBlock0@raymondhill.net" = {
             install_url = "https://addons.mozilla.org/firefox/downloads/latest/ublock-origin/latest.xpi";
             installation_mode = "force_installed";
+            default_area = "navbar";
           };
           "plasma-browser-integration@kde.org" = {
             install_url = "https://addons.mozilla.org/firefox/downloads/file/4614817/latest.xpi";
             installation_mode = "force_installed";
+            default_area = "menupanel";
           };
           "@alpinejs-devtools-pro" = {
             install_url = "https://addons.mozilla.org/firefox/downloads/file/4848289/latest.xpi";
             installation_mode = "force_installed";
+            default_area = "menupanel";
           };
           "helper@savefrom.net" = {
             install_url = "https://addons.mozilla.org/firefox/downloads/file/4994239/latest.xpi";
             installation_mode = "force_installed";
+            default_area = "menupanel";
           };
           "browsec@browsec.com" = {
             install_url = "https://addons.mozilla.org/firefox/downloads/file/4888986/latest.xpi";
             installation_mode = "force_installed";
+            default_area = "menupanel";
           };
           "FirefoxColor@mozilla.com" = {
             install_url = "https://addons.mozilla.org/firefox/downloads/file/3643624/latest.xpi";
             installation_mode = "force_installed";
+            default_area = "menupanel";
           };
         };
 
         Preferences = lib.mkMerge [
           (lib.mkIf isLowspec {
-            "dom.ipc.processCount" = 2;
+            "gfx.webrender.all" = {
+              Value = true;
+              Status = "default";
+            };
+            "media.ffmpeg.vaapi.enabled" = {
+              Value = true;
+              Status = "default";
+            };
+            "media.hardware-video-decoding.force-enabled" = {
+              Value = true;
+              Status = "default";
+            };
+            "dom.ipc.processCount" = {
+              Value = 2;
+              Status = "default";
+            };
 
-            "toolkit.cosmeticAnimations.enabled" = false;
-            "browser.download.animateNotifications" = false;
+            "browser.tabs.unloadOnLowMemory" = {
+              Value = true;
+              Status = "default";
+            };
+            "browser.sessionstore.max_tabs_undo" = {
+              Value = 2;
+              Status = "default";
+            };
 
-            "browser.tabs.unloadOnLowMemory" = true;
-
-            "general.smoothScroll" = false;
-
-            "datareporting.healthreport.uploadEnabled" = false;
-            "toolkit.telemetry.unified" = false;
-            "experiments.supported" = false;
+            "datareporting.healthreport.uploadEnabled" = {
+              Value = false;
+              Status = "default";
+            };
+            "toolkit.telemetry.unified" = {
+              Value = false;
+              Status = "default";
+            };
+            "experiments.supported" = {
+              Value = false;
+              Status = "default";
+            };
           })
           {
             "security.enterprise_roots.enabled" = true;
@@ -146,57 +217,6 @@ in
             "sidebar.main.tools" = {
               Value = "history,bookmarks,passwords";
               Status = "locked";
-            };
-
-            # Custom Toolbar Placement Layout
-            "browser.uiCustomization.state" = {
-              Value = builtins.toJSON {
-                placements = {
-                  widget-overflow-fixed-list = [ ];
-                  unified-extensions-area = [
-                    "helper_savefrom_net-browser-action"
-                    "plasma-browser-integration_kde_org-browser-action"
-                    "browsec_browsec_com-browser-action"
-                  ];
-                  nav-bar = [
-                    "sidebar-button"
-                    "back-button"
-                    "forward-button"
-                    "stop-reload-button"
-                    "urlbar-container"
-                    "unified-extensions-button"
-                    "downloads-button"
-                    "ublock0_raymondhill_net-browser-action"
-                    "panel-menu-button"
-                  ];
-                  toolbar-menubar = [ "menubar-items" ];
-                  TabsToolbar = [ ];
-                  vertical-tabs = [ "tabbrowser-tabs" ];
-                  PersonalToolbar = [
-                    "import-button"
-                    "personal-bookmarks"
-                  ];
-                };
-                seen = [
-                  "developer-button"
-                  "helper_savefrom_net-browser-action"
-                  "plasma-browser-integration_kde_org-browser-action"
-                  "browsec_browsec_com-browser-action"
-                  "ublock0_raymondhill_net-browser-action"
-                  "downloads-button"
-                ];
-                dirtyAreaCache = [
-                  "nav-bar"
-                  "TabsToolbar"
-                  "vertical-tabs"
-                  "PersonalToolbar"
-                  "unified-extensions-area"
-                  "toolbar-menubar"
-                ];
-                currentVersion = 28;
-                newElementCount = 0;
-              };
-              Status = "user";
             };
           }
         ];

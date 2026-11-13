@@ -47,6 +47,13 @@
             username = user.name;
             homeDirectory = "/home/${user.name}";
             stateVersion = "26.05";
+            sessionVariables = {
+              NIXOS_OZONE_WL = "1";          # Forces Electron & Chromium apps onto Wayland
+              MOZ_ENABLE_WAYLAND = "1";      # Forces Firefox onto Wayland
+              QT_QPA_PLATFORM = "wayland;xcb"; # Tries Wayland first, falls back to X11 only if needed
+              GDK_BACKEND = "wayland,x11";   # Tries Wayland first for GTK apps
+              SDL_VIDEODRIVER = "wayland";   # Forces SDL2 games/apps onto Wayland
+            };
           };
         };
       };
