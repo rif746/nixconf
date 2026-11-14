@@ -28,41 +28,41 @@ in
         extensions.force = true;
 
         settings = {
-            "browser.uiCustomization.state" = builtins.toJSON {
-              placements = {
-                widget-overflow-fixed-list = [ ];
-                unified-extensions-area = [ ];
-                nav-bar = [
-                  "sidebar-button"
-                  "back-button"
-                  "forward-button"
-                  "stop-reload-button"
-                  "urlbar-container"
-                  "unified-extensions-button"
-                  "downloads-button"
-                  "ublock0_raymondhill_net-browser-action"
-                ];
-                toolbar-menubar = [ "menubar-items" ];
-                TabsToolbar = [ ];
-                vertical-tabs = [ "tabbrowser-tabs" ];
-                PersonalToolbar = [
-                  "import-button"
-                  "personal-bookmarks"
-                ];
-              };
-              seen = [
-                "developer-button"
+          "browser.uiCustomization.state" = builtins.toJSON {
+            placements = {
+              widget-overflow-fixed-list = [ ];
+              unified-extensions-area = [ ];
+              nav-bar = [
+                "sidebar-button"
+                "back-button"
+                "forward-button"
+                "stop-reload-button"
+                "urlbar-container"
+                "unified-extensions-button"
+                "downloads-button"
                 "ublock0_raymondhill_net-browser-action"
               ];
-              dirtyAreaCache = [
-                "nav-bar"
-                "TabsToolbar"
-                "PersonalToolbar"
-                "unified-extensions-area"
-                "toolbar-menubar"
+              toolbar-menubar = [ "menubar-items" ];
+              TabsToolbar = [ ];
+              vertical-tabs = [ "tabbrowser-tabs" ];
+              PersonalToolbar = [
+                "import-button"
+                "personal-bookmarks"
               ];
-              currentVersion = 28;
-              newElementCount = 0;
+            };
+            seen = [
+              "developer-button"
+              "ublock0_raymondhill_net-browser-action"
+            ];
+            dirtyAreaCache = [
+              "nav-bar"
+              "TabsToolbar"
+              "PersonalToolbar"
+              "unified-extensions-area"
+              "toolbar-menubar"
+            ];
+            currentVersion = 28;
+            newElementCount = 0;
           };
         };
       };

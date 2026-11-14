@@ -1,4 +1,5 @@
-{ ... }: {
+{ ... }:
+{
   flake.homeModules.cli-yazi =
     {
       pkgs,
@@ -100,7 +101,11 @@
 
         settings = {
           mgr = {
-            ratio = [ 1 4 3 ];
+            ratio = [
+              1
+              4
+              3
+            ];
             sort_by = "natural";
             sort_sensitive = false;
             sort_dir_first = true;
@@ -120,26 +125,62 @@
 
           opener = {
             edit = [
-              { run = ''$EDITOR "$@"''; block = true; desc = "$EDITOR"; }
+              {
+                run = ''$EDITOR "$@"'';
+                block = true;
+                desc = "$EDITOR";
+              }
             ];
             image = [
-              { run = ''feh --scale-down "$@"''; orphan = true; desc = "feh"; }
+              {
+                run = ''feh --scale-down "$@"'';
+                orphan = true;
+                desc = "feh";
+              }
             ];
             extract = [
-              { run = ''ya pub extract --list "$@"''; desc = "Extract here"; }
+              {
+                run = ''ya pub extract --list "$@"'';
+                desc = "Extract here";
+              }
             ];
             open = [
-              { run = ''xdg-open "$1"''; orphan = true; desc = "Open"; }
+              {
+                run = ''xdg-open "$1"'';
+                orphan = true;
+                desc = "Open";
+              }
             ];
           };
 
           open = {
             rules = [
-              { mime = "text/*"; use = [ "edit" ]; }
-              { mime = "application/json"; use = [ "edit" ]; }
-              { mime = "image/*"; use = [ "image" "open" ]; }
-              { mime = "application/{zip,x-tar,x-bzip2,x-7z-compressed,x-rar,xz}"; use = [ "extract" "open" ]; }
-              { url = "*"; use = [ "open" ]; }
+              {
+                mime = "text/*";
+                use = [ "edit" ];
+              }
+              {
+                mime = "application/json";
+                use = [ "edit" ];
+              }
+              {
+                mime = "image/*";
+                use = [
+                  "image"
+                  "open"
+                ];
+              }
+              {
+                mime = "application/{zip,x-tar,x-bzip2,x-7z-compressed,x-rar,xz}";
+                use = [
+                  "extract"
+                  "open"
+                ];
+              }
+              {
+                url = "*";
+                use = [ "open" ];
+              }
             ];
           };
         };
@@ -147,47 +188,165 @@
         keymap = {
           mgr.prepend_keymap = [
             # Mount manager (mount.yazi)
-            { on = [ "M" ]; run = "plugin mount"; desc = "Open mount manager"; }
+            {
+              on = [ "M" ];
+              run = "plugin mount";
+              desc = "Open mount manager";
+            }
 
             # Quick directory jumps
-            { on = [ "d" "d" ]; run = "cd /mnt/Data"; desc = "Go to /mnt/Data"; }
-            { on = [ "d" "/" ]; run = "cd /"; desc = "Go to /"; }
-            { on = [ "d" "h" ]; run = "cd ~"; desc = "Go to Home"; }
-            { on = [ "d" "s" ]; run = "cd /srv/http"; desc = "Go to /srv/http"; }
-            { on = [ "d" "m" ]; run = "cd /run/media"; desc = "Go to /run/media"; }
-
-            # Native Yazi built-in commands
-            { on = [ "+" "d" ]; run = "create --dir"; desc = "Create directory"; }
-            { on = [ "+" "f" ]; run = "create"; desc = "Create file"; }
-            { on = [ "<Delete>" ]; run = "remove"; desc = "Trash selected files"; }
-            { on = [ "<S-Delete>" ]; run = "remove --permanently"; desc = "Permanently delete"; }
-            { on = [ "g" ]; run = "hidden toggle"; desc = "Toggle hidden files"; }
-            { on = [ "c" "c" ]; run = [ "yank" "paste" ]; desc = "Copy & paste in-place"; }
-            { on = [ "c" "m" ]; run = [ "yank --cut" "paste" ]; desc = "Cut & paste"; }
-            { on = [ "/" ]; run = "plugin fzf"; desc = "Jump with fzf"; }
-            { on = [ "a" "u" ]; run = "plugin extract"; desc = "Extract archive"; }
-            { on = [ "r" ]; run = "rename --cursor=before_ext"; desc = "Rename / Bulk rename in $EDITOR"; }
-            { on = [ "s" "t" "u" ]; run = "rename --cursor=before_ext"; desc = "Bulk rename in $EDITOR"; }
-            { on = [ "b" ]; run = ''shell '$EDITOR "$PWD"' --block''; desc = "Open current dir in Neovim"; }
-
-            # External helper scripts
-            { on = [ "a" "z" ]; run = ''shell '${yazi-archive-zip}/bin/yazi-archive-zip "$@"' --block''; desc = "Zip selected"; }
-            { on = [ "x" "x" ]; run = ''shell 'dragon-drop -a -x "$@"' --orphan''; desc = "Drag and drop out"; }
-            { on = [ "x" "c" ]; run = ''shell '${yazi-drag-in}/bin/yazi-drag-in copy' --block''; desc = "Drag and drop copy in"; }
-            { on = [ "x" "m" ]; run = ''shell '${yazi-drag-in}/bin/yazi-drag-in move' --block''; desc = "Drag and drop move in"; }
-            { on = [ "p" "d" ]; run = ''shell '${yazi-pdf-decrypt}/bin/yazi-pdf-decrypt "$@"' --block''; desc = "Decrypt PDF"; }
-            { on = [ "p" "c" ]; run = ''shell '${yazi-pdf-cut}/bin/yazi-pdf-cut "$@"' --block''; desc = "Cut PDF pages"; }
-
-            # Wallpaper & Lockscreen
             {
-              on = [ "w" "p" ];
-              run = ''shell 'cp "$0" ~/.config/.wallpaper.png && feh --bg-fill "$0"' --orphan'';
-              desc = "Set as wallpaper";
+              on = [
+                "d"
+                "h"
+              ];
+              run = "cd ~";
+              desc = "Go to Home";
             }
             {
-              on = [ "w" "l" ];
-              run = ''shell 'betterlockscreen -u "$0" && betterlockscreen -l dim' --orphan'';
-              desc = "Set as lockscreen";
+              on = [
+                "d"
+                "m"
+              ];
+              run = "cd /run/media";
+              desc = "Go to /run/media";
+            }
+
+            # Native Yazi built-in commands
+            {
+              on = [
+                "+"
+                "d"
+              ];
+              run = "create --dir";
+              desc = "Create directory";
+            }
+            {
+              on = [
+                "+"
+                "f"
+              ];
+              run = "create";
+              desc = "Create file";
+            }
+            {
+              on = [ "<Delete>" ];
+              run = "remove";
+              desc = "Trash selected files";
+            }
+            {
+              on = [ "<S-Delete>" ];
+              run = "remove --permanently";
+              desc = "Permanently delete";
+            }
+            {
+              on = [ "g" ];
+              run = "hidden toggle";
+              desc = "Toggle hidden files";
+            }
+            {
+              on = [
+                "c"
+                "c"
+              ];
+              run = [
+                "yank"
+                "paste"
+              ];
+              desc = "Copy & paste in-place";
+            }
+            {
+              on = [
+                "c"
+                "m"
+              ];
+              run = [
+                "yank --cut"
+                "paste"
+              ];
+              desc = "Cut & paste";
+            }
+            {
+              on = [ "/" ];
+              run = "plugin fzf";
+              desc = "Jump with fzf";
+            }
+            {
+              on = [
+                "a"
+                "u"
+              ];
+              run = "plugin extract";
+              desc = "Extract archive";
+            }
+            {
+              on = [ "r" ];
+              run = "rename --cursor=before_ext";
+              desc = "Rename / Bulk rename in $EDITOR";
+            }
+            {
+              on = [
+                "s"
+                "t"
+                "u"
+              ];
+              run = "rename --cursor=before_ext";
+              desc = "Bulk rename in $EDITOR";
+            }
+            {
+              on = [ "b" ];
+              run = "shell '$EDITOR %d' --block";
+              desc = "Open current dir in Neovim";
+            }
+
+            # External helper scripts
+            {
+              on = [
+                "a"
+                "z"
+              ];
+              run = "shell '${yazi-archive-zip}/bin/yazi-archive-zip %s' --block";
+              desc = "Zip selected";
+            }
+            {
+              on = [
+                "x"
+                "x"
+              ];
+              run = "shell '${pkgs.dragon-drop}/bin/dragon-drop -a -x %s' --orphan";
+              desc = "Drag and drop out";
+            }
+            {
+              on = [
+                "x"
+                "c"
+              ];
+              run = "shell '${yazi-drag-in}/bin/yazi-drag-in copy' --block";
+              desc = "Drag and drop copy in";
+            }
+            {
+              on = [
+                "x"
+                "m"
+              ];
+              run = "shell '${yazi-drag-in}/bin/yazi-drag-in move' --block";
+              desc = "Drag and drop move in";
+            }
+            {
+              on = [
+                "p"
+                "d"
+              ];
+              run = "shell '${yazi-pdf-decrypt}/bin/yazi-pdf-decrypt %s' --block";
+              desc = "Decrypt PDF";
+            }
+            {
+              on = [
+                "p"
+                "c"
+              ];
+              run = "shell '${yazi-pdf-cut}/bin/yazi-pdf-cut %s' --block";
+              desc = "Cut PDF pages";
             }
           ];
         };
