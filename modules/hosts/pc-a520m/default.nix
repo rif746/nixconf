@@ -27,6 +27,7 @@
                 git.enable = true;
               };
               nvim.enable = true;
+              ollama.enable = true;
               llm = {
                 enable = true;
                 junie.enable = true;
