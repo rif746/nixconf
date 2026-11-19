@@ -1,5 +1,5 @@
 { inputs, ... }: {
-  flake.nixosModules.twindesk =
+  flake.nixosModules.tools-twindesk =
     {
       config,
       lib,

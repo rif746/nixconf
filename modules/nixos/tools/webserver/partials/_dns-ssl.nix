@@ -1,4 +1,8 @@
-{ user, cfg, certDir }:
+{
+  user,
+  cfg,
+  certDir,
+}:
 { lib, pkgs, ... }:
 {
   config = lib.mkIf cfg.enable {

@@ -15,6 +15,21 @@
       time.timeZone = "Asia/Jakarta";
       i18n.defaultLocale = "id_ID.UTF-8";
 
+      programs.nix-ld = {
+        enable = true;
+        libraries = with pkgs; [
+          stdenv.cc.cc.lib
+          zlib
+          zstd
+          openssl
+          curl
+          glib
+          libxml2
+          icu
+          sqlite
+        ];
+      };
+
       networking = {
         networkmanager.enable = true;
         nftables.enable = true;

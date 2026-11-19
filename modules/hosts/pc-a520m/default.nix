@@ -53,7 +53,7 @@
           tools = {
             webserver.enable = true;
             twindesk.enable = true;
-            dev = {
+            devkit = {
               adb.enable = true;
             };
             gaming = {

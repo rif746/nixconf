@@ -1,6 +1,6 @@
 { ... }:
 {
-  flake.nixosModules.devkit-webserver =
+  flake.nixosModules.tools-webserver =
     {
       user,
       config,
