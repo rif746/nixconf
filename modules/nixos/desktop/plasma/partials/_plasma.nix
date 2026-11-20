@@ -66,7 +66,6 @@ in
       {
         location = "top";
         height = 36;
-        screen = 0;
         widgets = [
           {
             name = "org.kde.plasma.kickoff";
@@ -106,7 +105,6 @@ in
       {
         location = "bottom";
         height = 52;
-        screen = 0;
         lengthMode = "fit";
         hiding = "dodgewindows";
         floating = true;

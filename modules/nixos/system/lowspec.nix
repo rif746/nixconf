@@ -15,15 +15,15 @@
       config = lib.mkIf cfg.enable {
         zramSwap = {
           enable = true;
-          memoryPercent = 50;
+          memoryPercent = 100;
           algorithm = "zstd";
         };
 
         services.earlyoom = {
           enable = true;
           enableNotifications = true;
-          freeMemThreshold = 15;
-          freeSwapThreshold = 10;
+          freeMemThreshold = 5;
+          freeSwapThreshold = 5;
         };
 
         powerManagement.cpuFreqGovernor = lib.mkDefault "schedutil";

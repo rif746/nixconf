@@ -47,7 +47,7 @@
           lowspec.enable = true;
           desktop.plasma.enable = true;
           tools = {
-            dev.adb.enable = true;
+            devkit.adb.enable = true;
             webserver.enable = true;
             twindesk.enable = true;
           };
