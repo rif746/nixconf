@@ -32,8 +32,7 @@
 
       config = lib.mkIf cfg.enable {
         environment.systemPackages = [
-          (pkgs.writeShellScriptBin "web-link" (builtins.readFile ./scripts/web-link.sh))
-          (pkgs.writeShellScriptBin "web-unlink" (builtins.readFile ./scripts/web-unlink.sh))
+          (pkgs.writeShellScriptBin "web" (builtins.readFile ./scripts/web.sh))
           pkgs.nodejs
           pkgs.nss
           pkgs.openssl
