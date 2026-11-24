@@ -24,7 +24,6 @@
                 enable = true;
                 git.enable = true;
               };
-              nvim.enable = true;
               llm = {
                 enable = true;
                 junie.enable = true;
@@ -45,9 +44,12 @@
 
         nixos = {
           lowspec.enable = true;
-          desktop.plasma.enable = true;
+          desktop.cinnamon.enable = true;
           tools = {
+            devkit.adb.enable = true;
             webserver.enable = true;
+            virtualisation.kvm.enable = true;
+            twindesk.enable = true;
           };
         };
       })
