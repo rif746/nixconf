@@ -1,8 +1,6 @@
 {
   config,
   pkgs,
-  lib,
-  osConfig ? { },
   ...
 }:
 let
@@ -13,34 +11,6 @@ let
     "applications:org.kde.konsole.desktop"
     "applications:systemsettings.desktop"
   ];
-
-  firefoxLauncher = lib.optional (
-    config.features.apps.browser.enable or false && config.features.apps.browser.firefox.enable or false
-  ) "applications:firefox.desktop";
-
-  braveLauncher = lib.optional (
-    config.features.apps.browser.enable or false && config.features.apps.browser.brave.enable or false
-  ) "applications:brave-browser.desktop";
-
-  communicationLauncher = lib.optional (config.features.apps.communication.enable or false
-  ) "applications:ferdium.desktop";
-
-  androidStudioLauncher = lib.optional (config.features.apps.jetbrains.android-studio.enable or false
-  ) "applications:android-studio.desktop";
-
-  phpStormLauncher = lib.optional (config.features.apps.jetbrains.phpstorm.enable or false
-  ) "applications:phpstorm.desktop";
-
-  pycharmLauncher = lib.optional (config.features.apps.jetbrains.pycharm.enable or false
-  ) "applications:pycharm.desktop";
-
-  datagripLauncher = lib.optional (config.features.apps.jetbrains.datagrip.enable or false
-  ) "applications:datagrip.desktop";
-
-  golandLauncher = lib.optional (config.features.apps.jetbrains.goland.enable or false
-  ) "applications:goland.desktop";
-
-  steamLauncher = lib.optional (osConfig.modules.gaming.enable or false) "applications:steam.desktop";
 in
 {
   home = {
@@ -111,17 +81,7 @@ in
         widgets = [
           {
             iconTasks = {
-              launchers =
-                baseLaunchers
-                ++ firefoxLauncher
-                ++ braveLauncher
-                ++ communicationLauncher
-                ++ steamLauncher
-                ++ androidStudioLauncher
-                ++ phpStormLauncher
-                ++ datagripLauncher
-                ++ pycharmLauncher
-                ++ golandLauncher;
+              launchers = baseLaunchers ++ map (d: "applications:${d}") config.features.desktop.optionalLaunchers;
             };
           }
         ];

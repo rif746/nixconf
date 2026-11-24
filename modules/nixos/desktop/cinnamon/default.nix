@@ -1,4 +1,4 @@
-    { ... }:
+{ ... }:
 {
   flake.nixosModules.desktop-cinnamon =
     {
@@ -9,28 +9,42 @@
     }:
     let
       cfg = config.nixos.desktop.cinnamon;
+      customApplets = pkgs.callPackage ./extensions/_applets.nix { };
     in
     {
       imports = [
         ./partials/_cinnamon.nix
         ./partials/_cinnamon-pinned-apps.nix
+        ./partials/_cinnamon-sysmon-applets.nix
         ./partials/_lightdm.nix
       ];
 
       options.nixos.desktop.cinnamon = {
-        enable = lib.mkEnableOption "Cinnamon Desktop Environment with LightDM and Picom";
+        enable = lib.mkEnableOption "Cinnamon Desktop Environment with LightDM";
       };
 
       config = lib.mkIf cfg.enable {
         services.xserver.enable = true;
-        stylix.targets.gtk.enable = false;
 
         environment.systemPackages = with pkgs; [
+          customApplets
+          libgtop
+          lm_sensors
           cinnamon-translations
           gnome-terminal
           nemo
           mousepad
           xclip
+        ];
+
+        environment.sessionVariables = {
+          GI_TYPELIB_PATH = "${pkgs.libgtop}/lib/girepository-1.0";
+        };
+
+        environment.pathsToLink = [
+          "/share/themes"
+          "/share/icons"
+          "/share/cinnamon"
         ];
 
         xdg.portal = {

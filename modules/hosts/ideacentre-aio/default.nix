@@ -45,7 +45,7 @@
 
         nixos = {
           lowspec.enable = true;
-          desktop.plasma.enable = true;
+          desktop.cinnamon.enable = true;
           tools = {
             devkit.adb.enable = true;
             webserver.enable = true;

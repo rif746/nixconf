@@ -9,7 +9,6 @@ let
   isDark = config.stylix.polarity == "dark";
   colorScheme = if isDark then "prefer-dark" else "prefer-light";
 
-  # Paket tema Catppuccin GTK lengkap (GTK2, GTK3, GTK4, Metacity, & Cinnamon Shell)
   variant = if isDark then "mocha" else "latte";
   accent = "blue";
   size = "standard";
@@ -20,14 +19,15 @@ let
     variant = variant;
   };
   themeName = "catppuccin-${variant}-${accent}-${size}";
+
+  customApplets = pkgs.callPackage ../extensions/_applets.nix { };
+  inherit (customApplets) sysmonUuid menuUuid;
 in
 {
   config = lib.mkIf cfg.enable {
-    services.xserver.desktopManager.cinnamon = {
-      enable = true;
-    };
+    services.xserver.desktopManager.cinnamon.enable = true;
 
-    # Matikan target GTK bawaan Stylix agar tidak menimpa tema GTK dengan paket tanpa dukungan Cinnamon
+    # Matikan target GTK Stylix agar tema Catppuccin GTK lengkap (termasuk Cinnamon Shell) tidak tertimpa
     stylix.targets.gtk.enable = lib.mkForce false;
 
     environment.systemPackages = with pkgs; [
@@ -37,12 +37,6 @@ in
       librsvg
     ];
 
-    environment.pathsToLink = [
-      "/share/themes"
-      "/share/icons"
-    ];
-
-    # Sinkronkan LightDM agar memakai tema Catppuccin GTK & ikon yang sama
     services.xserver.displayManager.lightdm.greeters.gtk = {
       theme = {
         name = lib.mkForce themeName;
@@ -58,19 +52,27 @@ in
       enable = true;
       profiles.user.databases = [
         {
-          locks = [
-            "/org/cinnamon/desktop/background/picture-uri"
-            "/org/cinnamon/desktop/background/picture-options"
-            "/org/cinnamon/desktop/interface/gtk-theme"
-            "/org/cinnamon/desktop/interface/icon-theme"
-            "/org/cinnamon/desktop/interface/color-scheme"
-            "/org/x/apps/portal/color-scheme"
-            "/org/gnome/desktop/interface/color-scheme"
-            "/org/cinnamon/theme/name"
-            "/org/cinnamon/desktop/effects/desktop-effects"
-          ];
-
           settings = {
+            "org/cinnamon" = {
+              panels-enabled = [ "1:0:bottom" ];
+
+              enabled-applets = [
+                "panel1:left:0:${menuUuid}:0"
+                "panel1:left:1:show-desktop@cinnamon.org:1"
+                "panel1:left:2:grouped-window-list@cinnamon.org:2"
+
+                "panel1:right:0:${sysmonUuid}:11"
+                "panel1:right:1:systray@cinnamon.org:3"
+                "panel1:right:2:xapp-status@cinnamon.org:4"
+                "panel1:right:3:notifications@cinnamon.org:5"
+                "panel1:right:4:removable-drives@cinnamon.org:6"
+                "panel1:right:5:network@cinnamon.org:7"
+                "panel1:right:6:sound@cinnamon.org:8"
+                "panel1:right:7:power@cinnamon.org:9"
+                "panel1:right:8:calendar@cinnamon.org:10"
+              ];
+            };
+
             "org/cinnamon/desktop/background" = {
               picture-uri = "file://${toString config.stylix.image}";
               picture-options = "zoom";
@@ -90,7 +92,6 @@ in
               color-scheme = colorScheme;
             };
 
-            # Shell Cinnamon memakai tema Catppuccin yang sama
             "org/cinnamon/theme" = {
               name = themeName;
             };

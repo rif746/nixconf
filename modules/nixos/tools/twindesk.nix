@@ -22,7 +22,6 @@
       config = lib.mkIf cfg.enable {
         programs.twindesk = {
           enable = true;
-          user = user.name;
           openFirewall = true;
           enableWifiDirect = true;
           virtualCamera = true;
