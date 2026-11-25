@@ -31,7 +31,6 @@
           libgtop
           lm_sensors
           cinnamon-translations
-          gnome-terminal
           nemo
           mousepad
           xclip

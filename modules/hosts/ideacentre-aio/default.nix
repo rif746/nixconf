@@ -13,6 +13,7 @@
           features = {
             apps = {
               browser.enable = true;
+              kitty.enable = true;
               jetbrains = {
                 enable = true;
                 phpstorm.enable = true;

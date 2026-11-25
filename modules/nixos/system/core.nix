@@ -53,6 +53,7 @@
         haruna
         mpv
         gtop
+        dragon-drop
       ];
 
       # Nix settings, auto cleanup and enable flakes
